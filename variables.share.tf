@@ -105,7 +105,7 @@ DESCRIPTION
     error_message = "The quota must be greater than or equal to 1"
   }
   validation {
-    condition     = alltrue([for share in var.storage_file_shares : (share.access_tier != "Premium" && share.quota <= 5120) || (share.access_tier == "Premium" && share.quota >= 100 && share.quota <= 102400)])
+    condition     = alltrue([for share in var.storage_file_shares : (share.access_tier != "Premium" && share.quota <= 5120) || (share.access_tier == "Premium" && share.quota >= 32 && share.quota <= 102400)])
     error_message = "The quota must be less than or equal to 5120 for non-Premium tiers. For Premium tier, it must be between 100 and 102400."
   }
 }
