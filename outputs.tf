@@ -39,6 +39,6 @@ output "system_assigned_identity_id" {
 }
 
 output "storage_share_ids" {
-  value = { for key, share in azurerm_storage_share.this : key => share.id }
+  value       = { for key, share in azurerm_storage_share.this : key => share.id }
   description = "Resource Manager IDs for each storage file share"
 }
