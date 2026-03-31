@@ -45,9 +45,11 @@ DESCRIPTION
 
 variable "storage_file_shares" {
   type = map(object({
-    access_tier      = optional(string, "Hot")
-    enabled_protocol = optional(string, "SMB")
-    quota            = optional(number, 1)
+    access_tier                     = optional(string, "Hot")
+    enabled_protocol                = optional(string, "SMB")
+    quota                           = optional(number, 1)
+    provisioned_iops                = optional(number, null)
+    provisioned_throughput_in_mibps = optional(number, null)
   }))
   default     = {}
   description = <<DESCRIPTION
@@ -56,6 +58,8 @@ variable "storage_file_shares" {
   - `access_tier` - (Optional) The access tier for the file share. Valid options are Hot, Cool, and TransactionOptimized. Defaults to Hot.
   - `enabled_protocol` - (Optional) The protocol to use for the file share. Valid options are SMB and NFS. Defaults to SMB.
   - `quota` - (Optional) The maximum size of the share, in gigabytes. For Standard storage accounts, this must be `1`GB (or higher) and at most `5120` GB (`5` TB). For Premium FileStorage storage accounts, this must be greater than 100 GB and at most `102400` GB (`100` TB).
+  - `provisioned_iops` - (Optional) The provisioned IOPS for the file share. Only valid when `provisioned_billing_model_version` is `V2`. **Note:** Not yet supported by the azurerm provider (upstream issue #30987). Setting this value will be validated but not passed to the resource.
+  - `provisioned_throughput_in_mibps` - (Optional) The provisioned throughput in MiB/s for the file share. Only valid when `provisioned_billing_model_version` is `V2`. **Note:** Not yet supported by the azurerm provider (upstream issue #30987). Setting this value will be validated but not passed to the resource.
 
 ```hcl
   storage_file_shares = {
@@ -101,7 +105,7 @@ DESCRIPTION
     error_message = "The quota must be greater than or equal to 1"
   }
   validation {
-    condition     = alltrue([for share in var.storage_file_shares : (share.access_tier != "Premium" && share.quota <= 5120) || (share.access_tier == "Premium" && share.quota >= 100 && share.quota <= 102400)])
+    condition     = alltrue([for share in var.storage_file_shares : (share.access_tier != "Premium" && share.quota <= 5120) || (share.access_tier == "Premium" && share.quota >= 32 && share.quota <= 102400)])
     error_message = "The quota must be less than or equal to 5120 for non-Premium tiers. For Premium tier, it must be between 100 and 102400."
   }
 }

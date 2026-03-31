@@ -18,19 +18,24 @@ resource "azurerm_storage_account" "this" {
   allowed_copy_scope                = var.allowed_copy_scope == "Unrestricted" ? null : var.allowed_copy_scope
   sftp_enabled                      = var.sftp_enabled
   is_hns_enabled                    = var.is_hns_enabled
+  provisioned_billing_model_version = var.provisioned_billing_model_version
   allow_nested_items_to_be_public   = var.network_configuration.allow_nested_items_to_be_public
   queue_encryption_key_type         = (var.enable_cmk_encryption || var.cmk_key_vault_id != null) ? "Account" : "Service"
   table_encryption_key_type         = (var.enable_cmk_encryption || var.cmk_key_vault_id != null) ? "Account" : "Service"
 
-  blob_properties {
-    delete_retention_policy {
-      days = var.storage_management_policy.blob_delete_retention_days
+  dynamic "blob_properties" {
+    for_each = var.account_kind != "FileStorage" ? [1] : []
+
+    content {
+      delete_retention_policy {
+        days = var.storage_management_policy.blob_delete_retention_days
+      }
+      container_delete_retention_policy {
+        days = var.storage_management_policy.container_delete_retention_days
+      }
+      versioning_enabled  = var.versioning_enabled
+      change_feed_enabled = var.change_feed_enabled
     }
-    container_delete_retention_policy {
-      days = var.storage_management_policy.container_delete_retention_days
-    }
-    versioning_enabled  = var.versioning_enabled
-    change_feed_enabled = var.change_feed_enabled
   }
 
   dynamic "identity" {
@@ -109,6 +114,16 @@ resource "azurerm_storage_account" "this" {
     ignore_changes = [
       customer_managed_key
     ]
+
+    precondition {
+      condition     = var.provisioned_billing_model_version == null || var.account_kind == "FileStorage"
+      error_message = "provisioned_billing_model_version can only be set when account_kind is 'FileStorage'."
+    }
+
+    precondition {
+      condition     = var.provisioned_billing_model_version == null || var.account_tier == "Premium"
+      error_message = "provisioned_billing_model_version can only be set when account_tier is 'Premium'."
+    }
   }
 }
 
@@ -155,9 +170,16 @@ resource "azurerm_storage_share" "this" {
 
   name               = each.key
   storage_account_id = azurerm_storage_account.this.id
-  access_tier        = each.value.access_tier
+  access_tier        = each.value.enabled_protocol != "NFS" ? each.value.access_tier : null
   enabled_protocol   = each.value.enabled_protocol
   quota              = each.value.quota
+
+  lifecycle {
+    precondition {
+      condition     = each.value.provisioned_iops == null && each.value.provisioned_throughput_in_mibps == null || var.provisioned_billing_model_version == "V2"
+      error_message = "provisioned_iops and provisioned_throughput_in_mibps can only be set when provisioned_billing_model_version is 'V2'."
+    }
+  }
 }
 
 resource "azurerm_role_assignment" "this" {
