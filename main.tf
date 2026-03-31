@@ -170,7 +170,7 @@ resource "azurerm_storage_share" "this" {
 
   name               = each.key
   storage_account_id = azurerm_storage_account.this.id
-  access_tier        = each.value.access_tier
+  access_tier        = each.value.enabled_protocol != "NFS" ? each.value.access_tier : null
   enabled_protocol   = each.value.enabled_protocol
   quota              = each.value.quota
 
