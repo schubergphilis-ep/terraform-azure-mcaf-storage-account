@@ -170,9 +170,14 @@ resource "azurerm_storage_share" "this" {
 
   name               = each.key
   storage_account_id = azurerm_storage_account.this.id
-  access_tier        = each.value.enabled_protocol != "NFS" ? each.value.access_tier : null
-  enabled_protocol   = each.value.enabled_protocol
-  quota              = each.value.quota
+  # access_tier must be null for NFS shares AND for any share on a FileStorage
+  # account; Azure rejects any non-null value in either case with 400
+  # AccessTierNotSupported. The variable still defaults to "Hot" so consumers
+  # don't need to know which combinations require null — the module nulls it
+  # transparently where Azure mandates it.
+  access_tier      = (each.value.enabled_protocol == "NFS" || var.account_kind == "FileStorage") ? null : each.value.access_tier
+  enabled_protocol = each.value.enabled_protocol
+  quota            = each.value.quota
 
   lifecycle {
     precondition {
