@@ -123,11 +123,6 @@ resource "azurerm_storage_account" "this" {
     ]
 
     precondition {
-      condition     = var.provisioned_billing_model_version == null || var.account_kind == "FileStorage"
-      error_message = "provisioned_billing_model_version can only be set when account_kind is 'FileStorage'."
-    }
-
-    precondition {
       condition     = var.provisioned_billing_model_version == null || var.account_tier == "Premium"
       error_message = "provisioned_billing_model_version can only be set when account_tier is 'Premium'."
     }

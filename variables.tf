@@ -49,6 +49,11 @@ variable "provisioned_billing_model_version" {
     condition     = var.provisioned_billing_model_version == null ? true : contains(["V1", "V2"], var.provisioned_billing_model_version)
     error_message = "The provisioned_billing_model_version must be null, 'V1', or 'V2'."
   }
+
+  validation {
+    condition     = var.provisioned_billing_model_version == null || var.account_kind == "FileStorage"
+    error_message = "provisioned_billing_model_version can only be set when account_kind is 'FileStorage'."
+  }
 }
 
 variable "shared_access_key_enabled" {
