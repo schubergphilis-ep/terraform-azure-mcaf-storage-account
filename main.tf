@@ -1,6 +1,13 @@
 data "azurerm_client_config" "current" {}
 
 resource "azurerm_storage_account" "this" {
+  #checkov:skip=CKV_AZURE_190:"Ensure that Storage blobs restrict public access" - allow_nested_items_to_be_public defaults to false and is configurable via network_configuration
+  #checkov:skip=CKV2_AZURE_47:"Ensure storage account is configured without blob anonymous access" - blob anonymous access disabled by default (allow_nested_items_to_be_public=false)
+  #checkov:skip=CKV_AZURE_59:"Ensure that Storage accounts disallow public access" - public_network_access_enabled defaults to false and is configurable via network_configuration
+  #checkov:skip=CKV_AZURE_244:"Avoid the use of local users for Azure Storage unless necessary" - local users are an opt-in SFTP feature, disabled by default (sftp_enabled=false)
+  #checkov:skip=CKV_AZURE_206:"Ensure that Storage Accounts use replication" - replication type is configurable; module defaults to ZRS by design
+  #checkov:skip=CKV_AZURE_33:"Ensure Storage logging is enabled for Queue service for read, write and delete requests" - queue service logging is out of scope for this module
+  #checkov:skip=CKV2_AZURE_33:"Ensure storage account is configured with private endpoint" - private endpoints are provisioned outside this module
   resource_group_name               = var.resource_group_name
   location                          = var.location
   name                              = var.name
@@ -114,20 +121,12 @@ resource "azurerm_storage_account" "this" {
     ignore_changes = [
       customer_managed_key
     ]
-
-    precondition {
-      condition     = var.provisioned_billing_model_version == null || var.account_kind == "FileStorage"
-      error_message = "provisioned_billing_model_version can only be set when account_kind is 'FileStorage'."
-    }
-
-    precondition {
-      condition     = var.provisioned_billing_model_version == null || var.account_tier == "Premium"
-      error_message = "provisioned_billing_model_version can only be set when account_tier is 'Premium'."
-    }
   }
 }
 
 resource "azurerm_storage_account_network_rules" "this" {
+  #checkov:skip=CKV_AZURE_35:"Ensure default network access rule for Storage Accounts is set to deny" - default_action defaults to Deny and is configurable via network_configuration
+  #checkov:skip=CKV_AZURE_36:"Ensure 'Trusted Microsoft Services' is enabled for Storage Account access" - bypass defaults to ["AzureServices"] and is configurable via network_configuration
   storage_account_id = azurerm_storage_account.this.id
 
   default_action             = var.network_configuration.default_action
@@ -158,6 +157,8 @@ resource "azurerm_storage_management_policy" "this" {
 }
 
 resource "azurerm_storage_container" "this" {
+  #checkov:skip=CKV_AZURE_34:"Ensure that 'Public access level' is set to Private for blob containers" - container_access_type defaults to "private" and is configurable per container
+  #checkov:skip=CKV2_AZURE_21:"Ensure Storage logging is enabled for Blob service for read requests" - blob read logging is handled via diagnostic settings outside this module
   for_each = var.storage_containers
 
   name                  = each.key

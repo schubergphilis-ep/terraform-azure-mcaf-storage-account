@@ -46,8 +46,18 @@ variable "provisioned_billing_model_version" {
   description = "The provisioned billing model version for the storage account. Only valid when account_kind is 'FileStorage'. Possible values are 'V1' and 'V2'. Changing this forces a new resource."
 
   validation {
-    condition     = var.provisioned_billing_model_version == null || contains(["V1", "V2"], var.provisioned_billing_model_version)
+    condition     = var.provisioned_billing_model_version == null ? true : contains(["V1", "V2"], var.provisioned_billing_model_version)
     error_message = "The provisioned_billing_model_version must be null, 'V1', or 'V2'."
+  }
+
+  validation {
+    condition     = var.provisioned_billing_model_version == null || var.account_kind == "FileStorage"
+    error_message = "provisioned_billing_model_version can only be set when account_kind is 'FileStorage'."
+  }
+
+  validation {
+    condition     = var.provisioned_billing_model_version == null || var.account_tier == "Premium"
+    error_message = "provisioned_billing_model_version can only be set when account_tier is 'Premium'."
   }
 }
 
