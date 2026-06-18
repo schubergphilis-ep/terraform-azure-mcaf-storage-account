@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.11.2](https://github.com/schubergphilis-ep/terraform-azure-mcaf-storage-account/compare/v0.11.1...v0.11.2) (2026-06-18)
+
+
+### 🐛 Fixes
+
+* variable validation of provisioned_billing_model ([#2](https://github.com/schubergphilis-ep/terraform-azure-mcaf-storage-account/issues/2)) ([c2fdaef](https://github.com/schubergphilis-ep/terraform-azure-mcaf-storage-account/commit/c2fdaef7c21b3109ed735c65c4469ebc31b90675))
+
 ## [0.11.1](https://github.com/schubergphilis-ep/terraform-azure-mcaf-storage-account/compare/v0.11.0...v0.11.1) (2026-06-08)
 
 
@@ -136,4 +143,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * LRS to ZRS ([#4](https://github.com/schubergphilis/terraform-azure-mcaf-storage-account/pull/4)) ([4ecc1f0](https://github.com/schubergphilis-ep/terraform-azure-mcaf-storage-account/commit/4ecc1f02f57851510619cf2503abf19b13f1cd86))
 * make the creation of containers optional ([#3](https://github.com/schubergphilis/terraform-azure-mcaf-storage-account/pull/3)) ([bdf7d53](https://github.com/schubergphilis-ep/terraform-azure-mcaf-storage-account/commit/bdf7d5397a1a434fe6be1467f6cae1ec83254d99))
 * misc: initial files ([#2](https://github.com/schubergphilis/terraform-azure-mcaf-storage-account/pull/2)) ([82a478e](https://github.com/schubergphilis-ep/terraform-azure-mcaf-storage-account/commit/82a478ee6e3f028cda46f274eb011cb3f4da35ac))
-
