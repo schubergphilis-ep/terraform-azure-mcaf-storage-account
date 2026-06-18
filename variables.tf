@@ -54,6 +54,11 @@ variable "provisioned_billing_model_version" {
     condition     = var.provisioned_billing_model_version == null || var.account_kind == "FileStorage"
     error_message = "provisioned_billing_model_version can only be set when account_kind is 'FileStorage'."
   }
+
+  validation {
+    condition     = var.provisioned_billing_model_version == null || var.account_tier == "Premium"
+    error_message = "provisioned_billing_model_version can only be set when account_tier is 'Premium'."
+  }
 }
 
 variable "shared_access_key_enabled" {

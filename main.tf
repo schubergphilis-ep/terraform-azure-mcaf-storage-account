@@ -121,11 +121,6 @@ resource "azurerm_storage_account" "this" {
     ignore_changes = [
       customer_managed_key
     ]
-
-    precondition {
-      condition     = var.provisioned_billing_model_version == null || var.account_tier == "Premium"
-      error_message = "provisioned_billing_model_version can only be set when account_tier is 'Premium'."
-    }
   }
 }
 
