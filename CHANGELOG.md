@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.0](https://github.com/schubergphilis-ep/terraform-azure-mcaf-storage-account/compare/v0.11.2...v1.0.0) (2026-07-06)
+
+
+### ⚠ BREAKING CHANGES
+
+* remove default blob owner on current user ([#4](https://github.com/schubergphilis-ep/terraform-azure-mcaf-storage-account/issues/4))
+
+### 🚀 Features
+
+* remove default blob owner on current user ([#4](https://github.com/schubergphilis-ep/terraform-azure-mcaf-storage-account/issues/4)) ([267d4bf](https://github.com/schubergphilis-ep/terraform-azure-mcaf-storage-account/commit/267d4bfe16e432ca6aa02f323b7b00531f4a6991))
+
 ## [0.11.2](https://github.com/schubergphilis-ep/terraform-azure-mcaf-storage-account/compare/v0.11.1...v0.11.2) (2026-06-18)
 
 
