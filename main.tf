@@ -1,5 +1,3 @@
-data "azurerm_client_config" "current" {}
-
 resource "azurerm_storage_account" "this" {
   #checkov:skip=CKV_AZURE_190:"Ensure that Storage blobs restrict public access" - allow_nested_items_to_be_public defaults to false and is configurable via network_configuration
   #checkov:skip=CKV2_AZURE_47:"Ensure storage account is configured without blob anonymous access" - blob anonymous access disabled by default (allow_nested_items_to_be_public=false)
@@ -186,12 +184,6 @@ resource "azurerm_storage_share" "this" {
       error_message = "provisioned_iops and provisioned_throughput_in_mibps can only be set when provisioned_billing_model_version is 'V2'."
     }
   }
-}
-
-resource "azurerm_role_assignment" "this" {
-  scope                = azurerm_storage_account.this.id
-  role_definition_name = "Storage Blob Data Owner"
-  principal_id         = data.azurerm_client_config.current.object_id
 }
 
 resource "azurerm_role_assignment" "extra" {
