@@ -158,16 +158,13 @@ variable "enable_cmk_encryption" {
   description = "Optional variable to enable support for cmk encryption for tables and queues while not setting the cmk encryption. Defaults to false"
 }
 
-variable "cmk_key_vault_id" {
-  type        = string
+variable "cmk_key" {
+  type = object({
+    key_vault_id = string
+    key_name     = string
+  })
   default     = null
-  description = "ID of the Key Vault to use for the Customer Managed Key"
-}
-
-variable "cmk_key_name" {
-  type        = string
-  default     = null
-  description = "Name of the Key (within the cmk_key_vault_id) to use as the Customer Managed Key"
+  description = "Customer Managed Key to use for this storage account. Leave null to not attach a CMK."
 }
 
 variable "tags" {
