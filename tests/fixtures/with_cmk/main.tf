@@ -1,4 +1,9 @@
 resource "azurerm_key_vault" "this" {
+  #checkov:skip=CKV_AZURE_42:test fixture, not production configuration
+  #checkov:skip=CKV_AZURE_189:test fixture, not production configuration
+  #checkov:skip=CKV_AZURE_110:test fixture, not production configuration
+  #checkov:skip=CKV_AZURE_109:test fixture, not production configuration
+  #checkov:skip=CKV2_AZURE_32:test fixture, not production configuration
   name                = "test-kv"
   location            = "westeurope"
   resource_group_name = "rg-test"
@@ -7,6 +12,8 @@ resource "azurerm_key_vault" "this" {
 }
 
 resource "azurerm_key_vault_key" "this" {
+  #checkov:skip=CKV_AZURE_40:test fixture, not production configuration
+  #checkov:skip=CKV_AZURE_112:test fixture, not production configuration
   name         = "test-key"
   key_vault_id = azurerm_key_vault.this.id
   key_type     = "RSA"
