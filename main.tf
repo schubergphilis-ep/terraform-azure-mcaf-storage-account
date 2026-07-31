@@ -25,8 +25,8 @@ resource "azurerm_storage_account" "this" {
   is_hns_enabled                    = var.is_hns_enabled
   provisioned_billing_model_version = var.provisioned_billing_model_version
   allow_nested_items_to_be_public   = var.network_configuration.allow_nested_items_to_be_public
-  queue_encryption_key_type         = (var.enable_cmk_encryption || var.cmk_key_vault_id != null) ? "Account" : "Service"
-  table_encryption_key_type         = (var.enable_cmk_encryption || var.cmk_key_vault_id != null) ? "Account" : "Service"
+  queue_encryption_key_type         = (var.enable_cmk_encryption || var.cmk_key != null) ? "Account" : "Service"
+  table_encryption_key_type         = (var.enable_cmk_encryption || var.cmk_key != null) ? "Account" : "Service"
 
   dynamic "blob_properties" {
     for_each = var.account_kind != "FileStorage" ? [1] : []
@@ -195,12 +195,12 @@ resource "azurerm_role_assignment" "extra" {
 }
 
 resource "azurerm_storage_account_customer_managed_key" "this" {
-  count = var.cmk_key_vault_id != null ? 1 : 0
+  count = var.cmk_key != null ? 1 : 0
 
   storage_account_id        = azurerm_storage_account.this.id
   user_assigned_identity_id = local.identity_user_assigned != null ? var.user_assigned_identities[0] : null
-  key_vault_id              = var.cmk_key_vault_id
-  key_name                  = var.cmk_key_name
+  key_vault_id              = var.cmk_key.key_vault_id
+  key_name                  = var.cmk_key.key_name
 
   depends_on = [
     azurerm_role_assignment.cmk
@@ -208,9 +208,9 @@ resource "azurerm_storage_account_customer_managed_key" "this" {
 }
 
 resource "azurerm_role_assignment" "cmk" {
-  count = (var.cmk_key_vault_id != null && (local.identity_system_assigned != null || local.identity_system_assigned_user_assigned != null)) ? 1 : 0
+  count = (var.cmk_key != null && (local.identity_system_assigned != null || local.identity_system_assigned_user_assigned != null)) ? 1 : 0
 
-  scope                = var.cmk_key_vault_id
+  scope                = var.cmk_key.key_vault_id
   role_definition_name = "Key Vault Crypto Service Encryption User"
   principal_id         = azurerm_storage_account.this.identity[0].principal_id
 }
