@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.0.0](https://github.com/schubergphilis-ep/terraform-azure-mcaf-storage-account/compare/v1.0.0...v2.0.0) (2026-07-31)
+
+
+### ⚠ BREAKING CHANGES
+
+* collapse cmk variables to object to fix unknown values for count ([#6](https://github.com/schubergphilis-ep/terraform-azure-mcaf-storage-account/issues/6))
+
+### 🚀 Features
+
+* collapse cmk variables to object to fix unknown values for count ([#6](https://github.com/schubergphilis-ep/terraform-azure-mcaf-storage-account/issues/6)) ([594ed0c](https://github.com/schubergphilis-ep/terraform-azure-mcaf-storage-account/commit/594ed0cb934cfb905a865bab7f33abd0eb76f38b))
+
 ## [1.0.0](https://github.com/schubergphilis-ep/terraform-azure-mcaf-storage-account/compare/v0.11.2...v1.0.0) (2026-07-06)
 
 
