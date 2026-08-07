@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.0.0](https://github.com/schubergphilis-ep/terraform-azure-mcaf-storage-account/compare/v2.0.0...v3.0.0) (2026-08-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* prep v5 ([#8](https://github.com/schubergphilis-ep/terraform-azure-mcaf-storage-account/issues/8))
+
+### 🚀 Features
+
+* prep v5 ([#8](https://github.com/schubergphilis-ep/terraform-azure-mcaf-storage-account/issues/8)) ([5a63fb7](https://github.com/schubergphilis-ep/terraform-azure-mcaf-storage-account/commit/5a63fb7f387b079158129e2efd4b958caaf48057))
+
 ## [2.0.0](https://github.com/schubergphilis-ep/terraform-azure-mcaf-storage-account/compare/v1.0.0...v2.0.0) (2026-07-31)
 
 
