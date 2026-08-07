@@ -199,8 +199,7 @@ resource "azurerm_storage_account_customer_managed_key" "this" {
 
   storage_account_id        = azurerm_storage_account.this.id
   user_assigned_identity_id = local.identity_user_assigned != null ? var.user_assigned_identities[0] : null
-  key_vault_id              = var.cmk_key.key_vault_id
-  key_name                  = var.cmk_key.key_name
+  key_vault_key_id          = var.cmk_key.key_vault_key_id
 
   depends_on = [
     azurerm_role_assignment.cmk
@@ -210,7 +209,7 @@ resource "azurerm_storage_account_customer_managed_key" "this" {
 resource "azurerm_role_assignment" "cmk" {
   count = (var.cmk_key != null && (local.identity_system_assigned != null || local.identity_system_assigned_user_assigned != null)) ? 1 : 0
 
-  scope                = var.cmk_key.key_vault_id
+  scope                = var.cmk_key.key_vault_key_id
   role_definition_name = "Key Vault Crypto Service Encryption User"
   principal_id         = azurerm_storage_account.this.identity[0].principal_id
 }

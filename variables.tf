@@ -97,7 +97,7 @@ variable "allowed_copy_scope" {
 }
 
 variable "min_tls_version" {
-  description = "The minimum TLS version to allow for requests to this storage account. Valid options are 'TLS1_0', 'TLS1_1', and 'TLS1_2'. Defaults to 'TLS1_2'."
+  description = "The minimum TLS version to allow for requests to this storage account. Defaults to 'TLS1_2'."
   type        = string
   default     = "TLS1_2"
 }
@@ -160,8 +160,7 @@ variable "enable_cmk_encryption" {
 
 variable "cmk_key" {
   type = object({
-    key_vault_id = string
-    key_name     = string
+    key_vault_key_id = string
   })
   default     = null
   description = "Customer Managed Key to use for this storage account. Leave null to not attach a CMK."
