@@ -34,7 +34,7 @@ output "access_keys" {
 }
 
 output "system_assigned_identity_id" {
-  value       = azurerm_storage_account.this.identity[0].principal_id
+  value       = var.system_assigned_identity_enabled ? azurerm_storage_account.this.identity[0].principal_id : null
   description = "System assigned identity id of the storage account"
 }
 

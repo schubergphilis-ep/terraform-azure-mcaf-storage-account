@@ -199,8 +199,7 @@ resource "azurerm_storage_account_customer_managed_key" "this" {
 
   storage_account_id        = azurerm_storage_account.this.id
   user_assigned_identity_id = local.identity_user_assigned != null ? var.user_assigned_identities[0] : null
-  key_vault_id              = var.cmk_key.key_vault_id
-  key_name                  = var.cmk_key.key_name
+  key_vault_key_id          = var.cmk_key.key_vault_key_id
 
   depends_on = [
     azurerm_role_assignment.cmk

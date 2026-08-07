@@ -2,6 +2,36 @@
 
 This document captures required refactoring on your part when upgrading to a module version that contains breaking changes.
 
+
+## Upgrading to v3.0.0
+
+#### Before
+
+```hcl
+module "storage_account" {
+  source = "schubergphilis-ep/mcaf-storage-account/azure"
+
+  # ...
+  cmk_key = {
+    key_vault_id = module.key_vault.key_vault_id
+    key_name     = module.key_vault.cmkrsa_key_name
+  }
+}
+```
+
+#### After
+
+```hcl
+module "storage_account" {
+  source = "schubergphilis-ep/mcaf-storage-account/azure"
+
+  # ...
+  cmk_key = {
+    key_vault_key_id = module.key_vault.key_vault_id
+  }
+}
+```
+
 ## Upgrading to v2.0.0
 
 ### `cmk_key_vault_id` / `cmk_key_name` variables replaced by `cmk_key`
