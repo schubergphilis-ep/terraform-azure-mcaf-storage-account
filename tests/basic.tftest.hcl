@@ -25,7 +25,8 @@ run "cmk_attached_with_known_values" {
 
   variables {
     cmk_key = {
-      key_vault_key_id = "https://mykeyvault.vault.azure.net/keys/my-key"
+      resource_versionless_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/example-rg/providers/Microsoft.KeyVault/vaults/mykeyvault/keys/my-key"
+      versionless_id          = "https://mykeyvault.vault.azure.net/keys/my-key"
     }
   }
 
