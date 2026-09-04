@@ -207,9 +207,9 @@ resource "azurerm_storage_account_customer_managed_key" "this" {
 }
 
 resource "azurerm_role_assignment" "cmk" {
-  count = (var.cmk_key != null && (local.identity_system_assigned != null || local.identity_system_assigned_user_assigned != null)) ? 1 : 0
+  count = (var.cmk_key != null && var.cmk_key.key_vault_id != null && (local.identity_system_assigned != null || local.identity_system_assigned_user_assigned != null)) ? 1 : 0
 
-  scope                = var.cmk_key.key_vault_key_id
+  scope                = var.cmk_key.key_vault_id
   role_definition_name = "Key Vault Crypto Service Encryption User"
   principal_id         = azurerm_storage_account.this.identity[0].principal_id
 }

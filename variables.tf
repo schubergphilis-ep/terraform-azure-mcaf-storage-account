@@ -161,9 +161,10 @@ variable "enable_cmk_encryption" {
 variable "cmk_key" {
   type = object({
     key_vault_key_id = string
+    key_vault_id     = optional(string)
   })
   default     = null
-  description = "Customer Managed Key to use for this storage account. Leave null to not attach a CMK."
+  description = "Customer Managed Key to use for this storage account. key_vault_key_id is the key's versionless URL used for encryption; key_vault_id is the Key Vault's ARM resource id used to scope the identity's role assignment. Leave null to not attach a CMK."
 }
 
 variable "tags" {
