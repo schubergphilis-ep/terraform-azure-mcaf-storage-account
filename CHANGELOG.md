@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.0.1](https://github.com/schubergphilis-ep/terraform-azure-mcaf-storage-account/compare/v3.0.0...v3.0.1) (2026-09-04)
+
+
+### 🐛 Fixes
+
+* scope CMK role assignment to the key and reshape cmk_key inputs ([#11](https://github.com/schubergphilis-ep/terraform-azure-mcaf-storage-account/issues/11)) ([97e42db](https://github.com/schubergphilis-ep/terraform-azure-mcaf-storage-account/commit/97e42db18bcd44707b465dbde48f4830ce6ac19f))
+
 ## [3.0.0](https://github.com/schubergphilis-ep/terraform-azure-mcaf-storage-account/compare/v2.0.0...v3.0.0) (2026-08-07)
 
 
