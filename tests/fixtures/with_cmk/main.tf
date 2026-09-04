@@ -22,7 +22,8 @@ module "storage_account" {
   location            = "westeurope"
 
   cmk_key = {
-    key_vault_key_id = azurerm_key_vault_key.this.versionless_id
+    resource_versionless_id = azurerm_key_vault_key.this.resource_versionless_id
+    versionless_id          = azurerm_key_vault_key.this.versionless_id
   }
 }
 
