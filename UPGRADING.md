@@ -6,8 +6,8 @@ This document captures required refactoring on your part when upgrading to a mod
 ## Upgrading to v3.0.1
 
 The `cmk_key` object now takes the two versionless attributes of the Key Vault key, so the module can attach the CMK (data-plane URL) and
-correctly scope the storage identity's role assignment (ARM resource id).
-The v3.0.0 `key_vault_key_id` shape could not complete an apply — the role-assignment scope wasinvalid — so this ships as a patch.
+correctly scope the storage identity's role assignment (ARM resource id). The role assignment is now scoped to the **specific CMK key** (`Key Vault Crypto ServiceEncryption User` on the key — least privilege) rather than the parent Key Vault; if you relied on the storage identity having vault-wide crypto access, note this narrower scope.The v3.0.0 `key_vault_key_id` shape could not complete an apply, so this ships as a
+patch.
 
 #### Before
 

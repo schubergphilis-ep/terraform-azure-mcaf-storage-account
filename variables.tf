@@ -164,7 +164,7 @@ variable "cmk_key" {
     versionless_id          = string
   })
   default     = null
-  description = "Customer Managed Key to use for this storage account. Leave null to not attach a CMK."
+  description = "Customer Managed Key to use for this storage account. The storage account's identity is granted 'Key Vault Crypto Service Encryption User' on this specific key (least privilege). Leave null to not attach a CMK."
 }
 
 variable "tags" {
