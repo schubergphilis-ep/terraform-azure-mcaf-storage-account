@@ -5,15 +5,15 @@ Terraform module that will deploy some infra that could be used for Azure Devops
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.9 |
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
-| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | ~> 4 |
+| ---- | ------- |
+| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 4.81.0 |
 
 ## Modules
 
@@ -22,7 +22,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [azurerm_data_protection_backup_instance_blob_storage.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/data_protection_backup_instance_blob_storage) | resource |
 | [azurerm_role_assignment.cmk](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_role_assignment.extra](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
@@ -37,10 +37,7 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
-| <a name="input_location"></a> [location](#input\_location) | Location of the Storage account | `string` | n/a | yes |
-| <a name="input_name"></a> [name](#input\_name) | Name of the Storage Account | `string` | n/a | yes |
-| <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | Name of the resource group to Create the Storage account in | `string` | n/a | yes |
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_access_tier"></a> [access\_tier](#input\_access\_tier) | Access tier for the storage account. Valid options are Hot and Cool. Defaults to Hot. | `string` | `"Hot"` | no |
 | <a name="input_account_kind"></a> [account\_kind](#input\_account\_kind) | Type of account to create. Valid options are Storage, StorageV2, BlobStorage, FileStorage, BlockBlobStorage, and StorageV2. Defaults to StorageV2. | `string` | `"StorageV2"` | no |
 | <a name="input_account_replication_type"></a> [account\_replication\_type](#input\_account\_replication\_type) | Type of replication to use for this storage account. Valid options are LRS, GRS, RAGRS, ZRS, GZRS, and RA\_GZRS. Defaults to ZRS. | `string` | `"ZRS"` | no |
@@ -49,7 +46,7 @@ No modules.
 | <a name="input_azure_files_authentication"></a> [azure\_files\_authentication](#input\_azure\_files\_authentication) | ---<br/>- `directory_type` - Specifies the directory service used. Possible values are `AADDS`, `AD` and `AADKERB`.<br/>- `active_directory` - A `active_directory` block. Required when `directory_type` is `AD`.<br/>  - `domain_name` - Specifies the primary domain that the AD DNS server is authoritative for.<br/>  - `domain_guid` - Specifies the domain GUID.<br/>  - `domain_sid` - (Optional) Specifies the security identifier (SID). This is required when `directory_type` is set to `AD`.<br/>  - `storage_sid` - (Optional) Specifies the security identifier (SID) for Azure Storage. This is required when `directory_type` is set to `AD`.<br/>  - `forest_name` - (Optional) Specifies the Active Directory forest. This is required when `directory_type` is set to `AD`.<br/>  - `netbios_domain_name` -  (Optional) Specifies the NetBIOS domain name. This is required when `directory_type` is set to `AD`.<br/>- `default_share_level_permission` - (Optional) Specifies the default share level permissions applied to all users. Possible values are `StorageFileDataSmbShareReader`, `StorageFileDataSmbShareContributor`, `StorageFileDataSmbShareElevatedContributor`, or `None`.<br/><br/>---<pre>hcl<br/>  azure_files_authentication = {<br/>    directory_type = "AD"<br/>    active_directory = {<br/>      domain_name         = "<domain-name>"<br/>      domain_guid         = "<domain-guid>"<br/>      domain_sid          = "<domain-sid>"<br/>      storage_sid         = "<storage-sid>"<br/>      forest_name         = "<forest-name>"<br/>      netbios_domain_name = "<netbios-domain-name>"<br/>    }<br/>    default_share_level_permission = "StorageFileDataSmbShareReader"<br/>  }</pre> | <pre>object({<br/>    directory_type = string<br/>    active_directory = object({<br/>      domain_name         = string<br/>      domain_guid         = string<br/>      domain_sid          = optional(string)<br/>      storage_sid         = optional(string)<br/>      forest_name         = optional(string)<br/>      netbios_domain_name = optional(string)<br/>    })<br/>    default_share_level_permission = optional(string)<br/>  })</pre> | `null` | no |
 | <a name="input_blob_storage_backup"></a> [blob\_storage\_backup](#input\_blob\_storage\_backup) | Blob storage backup policy settings for the storage account. Defaults to null which does not set any blob storage backup policy. | <pre>object({<br/>    name             = optional(string, null)<br/>    backup_vault_id  = optional(string, null)<br/>    backup_policy_id = optional(string, null)<br/>    container_names  = optional(list(string), null) # If the backup policy type is "Vaulted" you need to list each individual container you want to backup<br/>  })</pre> | `null` | no |
 | <a name="input_change_feed_enabled"></a> [change\_feed\_enabled](#input\_change\_feed\_enabled) | Enable or Disable change feed events for the storage account. Defaults to true. | `bool` | `true` | no |
-| <a name="input_cmk_key"></a> [cmk\_key](#input\_cmk\_key) | Customer Managed Key to use for this storage account. key\_vault\_key\_id is the key's versionless URL used for encryption; key\_vault\_id is the Key Vault's ARM resource id used to scope the identity's role assignment. Leave null to not attach a CMK. | <pre>object({<br/>    key_vault_key_id = string<br/>    key_vault_id     = optional(string)<br/>  })</pre> | `null` | no |
+| <a name="input_cmk_key"></a> [cmk\_key](#input\_cmk\_key) | Customer Managed Key to use for this storage account. Leave null to not attach a CMK. | <pre>object({<br/>    resource_versionless_id = string<br/>    versionless_id          = string<br/>  })</pre> | `null` | no |
 | <a name="input_contributors"></a> [contributors](#input\_contributors) | list of principal IDs that are allowed to be contributor on this storage account. Defaults to an empty list. | `list(string)` | `[]` | no |
 | <a name="input_cross_tenant_replication_enabled"></a> [cross\_tenant\_replication\_enabled](#input\_cross\_tenant\_replication\_enabled) | Allow or disallow cross Tenant replication for this storage account. Defaults to false. | `bool` | `false` | no |
 | <a name="input_default_to_oauth_authentication"></a> [default\_to\_oauth\_authentication](#input\_default\_to\_oauth\_authentication) | Allow or disallow defaulting to OAuth authentication for this storage account. Defaults to true. | `bool` | `true` | no |
@@ -57,9 +54,12 @@ No modules.
 | <a name="input_immutability_policy"></a> [immutability\_policy](#input\_immutability\_policy) | immutability policy settings for the storage account. Defaults to null which does not set any immutability policy | <pre>object({<br/>    state                         = optional(string, "Unlocked")<br/>    allow_protected_append_writes = optional(bool, true)<br/>    period_since_creation_in_days = optional(number, 14)<br/>  })</pre> | `null` | no |
 | <a name="input_infrastructure_encryption_enabled"></a> [infrastructure\_encryption\_enabled](#input\_infrastructure\_encryption\_enabled) | Allow or disallow infrastructure encryption for this storage account. Defaults to true. | `bool` | `true` | no |
 | <a name="input_is_hns_enabled"></a> [is\_hns\_enabled](#input\_is\_hns\_enabled) | (Optional) Enables Hierarchical Namespace for this storage account. | `bool` | `false` | no |
+| <a name="input_location"></a> [location](#input\_location) | Location of the Storage account | `string` | n/a | yes |
 | <a name="input_min_tls_version"></a> [min\_tls\_version](#input\_min\_tls\_version) | The minimum TLS version to allow for requests to this storage account. Defaults to 'TLS1\_2'. | `string` | `"TLS1_2"` | no |
+| <a name="input_name"></a> [name](#input\_name) | Name of the Storage Account | `string` | n/a | yes |
 | <a name="input_network_configuration"></a> [network\_configuration](#input\_network\_configuration) | the network configuration for the storage account. Defaults to no public access and https enforced | <pre>object({<br/>    https_traffic_only_enabled      = optional(bool, true)<br/>    allow_nested_items_to_be_public = optional(bool, false)<br/>    public_network_access_enabled   = optional(bool, false)<br/>    default_action                  = optional(string, "Deny")<br/>    virtual_network_subnet_ids      = optional(set(string), [])<br/>    ip_rules                        = optional(set(string), [])<br/>    bypass                          = optional(set(string), ["AzureServices"])<br/>  })</pre> | `{}` | no |
 | <a name="input_provisioned_billing_model_version"></a> [provisioned\_billing\_model\_version](#input\_provisioned\_billing\_model\_version) | The provisioned billing model version for the storage account. Only valid when account\_kind is 'FileStorage'. Possible values are 'V1' and 'V2'. Changing this forces a new resource. | `string` | `null` | no |
+| <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | Name of the resource group to Create the Storage account in | `string` | n/a | yes |
 | <a name="input_sftp_enabled"></a> [sftp\_enabled](#input\_sftp\_enabled) | Allow or disallow SFTP access to this storage account. Defaults to false. | `bool` | `false` | no |
 | <a name="input_sftp_local_user_config"></a> [sftp\_local\_user\_config](#input\_sftp\_local\_user\_config) | (Optional) Configuration for the local user identity in the Azure Storage Account for SFTP.<br/><br/>  For example:<br/>  name            = "sasftpuser01"<br/>  ssh\_key\_enabled = true<br/>  home\_directory  = "/home/sasftpuser01"<br/>  ssh\_authorized\_keys = [<br/>    {<br/>      description = "Public key of local user identity 01"<br/>      key         = "ssh-rsa"<br/>    },<br/>    {<br/>      description = "Public key of local user identity 02"<br/>      key         = "ssh-rsa"<br/>    }<br/>  ]<br/>  permission\_scopes = [<br/>    {<br/>      service       = "blob"<br/>      resource\_name = "container01"<br/>      permissions = {<br/>        read   = true<br/>        create = true<br/>        delete = true<br/>        list   = true<br/>        write  = true<br/>      }<br/>    },<br/>    {<br/>      service       = "blob"<br/>      resource\_name = "container02"<br/>      permissions = {<br/>        read   = true<br/>        create = true<br/>        delete = true<br/>        list   = true<br/>        write  = true<br/>      }<br/>    }<br/>  ]<br/>} | <pre>list(object({<br/>    name           = string<br/>    home_directory = optional(string, "")<br/>    ssh_authorized_keys = list(object({<br/>      description = string<br/>      key         = string<br/>    }))<br/>    permission_scopes = optional(list(object({<br/>      service       = string<br/>      resource_name = string<br/>      permissions = object({<br/>        read   = bool<br/>        create = bool<br/>        delete = bool<br/>        list   = bool<br/>        write  = bool<br/>      })<br/>    })))<br/>  }))</pre> | `null` | no |
 | <a name="input_share_properties"></a> [share\_properties](#input\_share\_properties) | ---<br/>- `retention_policy` - (Optional) A set of properties for the retention policy.<br/>  - `days` - (Optional) The number of days that the share should retain data. If not specified, the share will retain data indefinitely.<br/><br/>- `smb` - (Optional) A set of properties for the SMB protocol.<br/>  - `authentication_types` - (Optional) A set of SMB authentication methods. Possible values are `NTLMv2`, and `Kerberos`.<br/>  - `channel_encryption_type` - (Optional) A set of SMB channel encryption. Possible values are `AES-128-CCM`, `AES-128-GCM`, and `AES-256-GCM`.<br/>  - `kerberos_ticket_encryption_type` - (Optional) A set of Kerberos ticket encryption. Possible values are `RC4-HMAC`, and `AES-256`.<br/>  - `multichannel_enabled` - (Optional) Indicates whether multichannel is enabled. Defaults to `false`. This is only supported on Premium storage accounts.<br/>  - `versions` - (Optional) A set of SMB protocol versions. Possible values are `SMB2.1`, `SMB3.0`, and `SMB3.1.1`.<br/><br/>---<pre>hcl<br/>  share_properties = {<br/>    smb = {<br/>      authentication_types            = ["NTLMv2", "Kerberos"]<br/>      channel_encryption_type         = ["AES-128-CCM", "AES-128-GCM", "AES-256-GCM"]<br/>      kerberos_ticket_encryption_type = ["RC4-HMAC", "AES-256"]<br/>      multichannel_enabled            = false<br/>      versions                        = ["SMB2.1", "SMB3.0", "SMB3.1.1"]<br/>    }<br/>    retention_policy = {<br/>      days = 30<br/>    }<br/>  }</pre> | <pre>object({<br/>    retention_policy = optional(object({<br/>      days = optional(number)<br/>    }), null)<br/>    smb = optional(object({<br/>      authentication_types            = optional(set(string), ["NTLMv2", "Kerberos"])<br/>      channel_encryption_type         = optional(set(string), ["AES-128-CCM", "AES-128-GCM", "AES-256-GCM"])<br/>      kerberos_ticket_encryption_type = optional(set(string), ["AES-256"])<br/>      multichannel_enabled            = optional(bool, false)<br/>      versions                        = optional(set(string), ["SMB3.1.1"])<br/>    }), {})<br/>  })</pre> | `{}` | no |
@@ -75,7 +75,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_access_keys"></a> [access\_keys](#output\_access\_keys) | n/a |
 | <a name="output_endpoints"></a> [endpoints](#output\_endpoints) | Endpoint information of the storage account |
 | <a name="output_id"></a> [id](#output\_id) | Resource Id of the storage account |
