@@ -100,6 +100,12 @@ variable "min_tls_version" {
   description = "The minimum TLS version to allow for requests to this storage account. Defaults to 'TLS1_2'."
   type        = string
   default     = "TLS1_2"
+
+  # azurerm 5.0 removed support for TLS1_0 and TLS1_1 on azurerm_storage_account.
+  validation {
+    condition     = !contains(["TLS1_0", "TLS1_1"], var.min_tls_version)
+    error_message = "min_tls_version must be TLS1_2 or newer; TLS1_0 and TLS1_1 are not supported by the azurerm provider (removed in v5.0)."
+  }
 }
 
 variable "sftp_enabled" {
