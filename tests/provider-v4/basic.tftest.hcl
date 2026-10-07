@@ -1,3 +1,5 @@
+# Mirrors the module's core plan assertions, run against this folder's pinned
+# azurerm major. Keep identical to provider-v5/basic.tftest.hcl.
 mock_provider "azurerm" {}
 
 variables {
@@ -8,6 +10,10 @@ variables {
 
 run "cmk_not_attached_by_default" {
   command = plan
+
+  module {
+    source = "../.."
+  }
 
   assert {
     condition     = length(azurerm_storage_account_customer_managed_key.this) == 0
@@ -22,6 +28,10 @@ run "cmk_not_attached_by_default" {
 
 run "cmk_attached_with_known_values" {
   command = plan
+
+  module {
+    source = "../.."
+  }
 
   variables {
     cmk_key = {
