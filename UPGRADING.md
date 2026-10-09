@@ -3,6 +3,16 @@
 This document captures required refactoring on your part when upgrading to a module version that contains breaking changes.
 
 
+## Upgrading to v4.0.0
+
+The module now requires the **azurerm 5.x** provider. The provider constraint was bumped from `~> 4` to `~> 5`, so azurerm 4.x is no longer supported.
+
+#### Migration steps
+
+1. Upgrade your root configuration to the azurerm 5.x provider (`version = "~> 5"`).
+2. Resolve any azurerm v4 → v5 breaking changes in your own configuration (see the [azurerm 5.0 upgrade guide](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/guides/5.0-upgrade-guide)).
+3. No changes to this module's input variables are required.
+
 ## Upgrading to v3.0.1
 
 The `cmk_key` object now takes the two versionless attributes of the Key Vault key, so the module can attach the CMK (data-plane URL) and

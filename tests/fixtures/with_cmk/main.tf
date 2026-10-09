@@ -1,10 +1,9 @@
 resource "azurerm_key_vault" "this" {
-  name                       = "test-kv"
-  location                   = "westeurope"
-  resource_group_name        = "rg-test"
-  tenant_id                  = "00000000-0000-0000-0000-000000000000"
-  sku_name                   = "standard"
-  rbac_authorization_enabled = true
+  name                = "test-kv"
+  location            = "westeurope"
+  resource_group_name = "rg-test"
+  tenant_id           = "00000000-0000-0000-0000-000000000000"
+  sku_name            = "standard"
 }
 
 resource "azurerm_key_vault_key" "this" {
