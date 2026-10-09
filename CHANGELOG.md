@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.1.0](https://github.com/schubergphilis-ep/terraform-azure-mcaf-storage-account/compare/v3.0.1...v3.1.0) (2026-10-09)
+
+
+### 🚀 Features
+
+* widen azurerm provider constraint to &gt;= 4 ([#14](https://github.com/schubergphilis-ep/terraform-azure-mcaf-storage-account/issues/14)) ([3beae1e](https://github.com/schubergphilis-ep/terraform-azure-mcaf-storage-account/commit/3beae1e7128fdcb7a13c9161b4913276bd1e6e07))
+
 ## [3.0.1](https://github.com/schubergphilis-ep/terraform-azure-mcaf-storage-account/compare/v3.0.0...v3.0.1) (2026-09-04)
 
 
