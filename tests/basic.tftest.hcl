@@ -40,3 +40,45 @@ run "cmk_attached_with_known_values" {
     error_message = "queue_encryption_key_type should switch to 'Account' when cmk_key is set."
   }
 }
+
+run "local_users_enabled_by_default" {
+  command = plan
+
+  assert {
+    condition     = azurerm_storage_account.this.local_user_enabled == true
+    error_message = "local_user_enabled should default to true to keep the azurerm default behaviour."
+  }
+}
+
+run "local_users_can_be_disabled" {
+  command = plan
+
+  variables {
+    local_user_enabled = false
+  }
+
+  assert {
+    condition     = azurerm_storage_account.this.local_user_enabled == false
+    error_message = "local_user_enabled should be false when explicitly disabled."
+  }
+}
+
+run "local_users_forced_on_by_sftp" {
+  command = plan
+
+  variables {
+    local_user_enabled = false
+    sftp_enabled       = true
+    is_hns_enabled     = true
+    sftp_local_user_config = [{
+      name                = "sftpuser"
+      ssh_authorized_keys = []
+      permission_scopes   = []
+    }]
+  }
+
+  assert {
+    condition     = azurerm_storage_account.this.local_user_enabled == true
+    error_message = "local_user_enabled must be true when sftp_enabled is true."
+  }
+}

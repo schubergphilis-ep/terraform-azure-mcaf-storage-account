@@ -108,6 +108,12 @@ variable "sftp_enabled" {
   description = "Allow or disallow SFTP access to this storage account. Defaults to false."
 }
 
+variable "local_user_enabled" {
+  type        = bool
+  default     = true
+  description = "Allow or disallow local users on this storage account. Defaults to true, which matches the azurerm provider default. Set to false to disable local users. Always enabled when sftp_enabled is true, because SFTP requires local users."
+}
+
 variable "is_hns_enabled" {
   type        = bool
   default     = false
