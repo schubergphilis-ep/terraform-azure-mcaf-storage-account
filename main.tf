@@ -6,6 +6,8 @@ resource "azurerm_storage_account" "this" {
   #checkov:skip=CKV_AZURE_206:"Ensure that Storage Accounts use replication" - replication type is configurable; module defaults to ZRS by design
   #checkov:skip=CKV_AZURE_33:"Ensure Storage logging is enabled for Queue service for read, write and delete requests" - queue service logging is out of scope for this module
   #checkov:skip=CKV2_AZURE_33:"Ensure storage account is configured with private endpoint" - private endpoints are provisioned outside this module
+  #checkov:skip=CKV_AZURE_35:"Ensure default network access rule for Storage Accounts is set to deny" - default_action defaults to Deny and is configurable via network_configuration
+  #checkov:skip=CKV_AZURE_36:"Ensure 'Trusted Microsoft Services' is enabled for Storage Account access" - bypass defaults to ["AzureServices"] and is configurable via network_configuration
   resource_group_name               = var.resource_group_name
   location                          = var.location
   name                              = var.name
@@ -109,6 +111,17 @@ resource "azurerm_storage_account" "this" {
     }
   }
 
+  dynamic "network_rules" {
+    for_each = var.inline_network_rules ? [1] : []
+
+    content {
+      default_action             = var.network_configuration.default_action
+      ip_rules                   = var.network_configuration.ip_rules
+      virtual_network_subnet_ids = var.network_configuration.virtual_network_subnet_ids
+      bypass                     = var.network_configuration.bypass
+    }
+  }
+
   tags = merge(
     try(var.tags),
     tomap({
@@ -123,7 +136,14 @@ resource "azurerm_storage_account" "this" {
   }
 }
 
+moved {
+  from = azurerm_storage_account_network_rules.this
+  to   = azurerm_storage_account_network_rules.this[0]
+}
+
 resource "azurerm_storage_account_network_rules" "this" {
+  count = var.inline_network_rules ? 0 : 1
+
   #checkov:skip=CKV_AZURE_35:"Ensure default network access rule for Storage Accounts is set to deny" - default_action defaults to Deny and is configurable via network_configuration
   #checkov:skip=CKV_AZURE_36:"Ensure 'Trusted Microsoft Services' is enabled for Storage Account access" - bypass defaults to ["AzureServices"] and is configurable via network_configuration
   storage_account_id = azurerm_storage_account.this.id

@@ -216,6 +216,12 @@ variable "network_configuration" {
   default = {}
 }
 
+variable "inline_network_rules" {
+  type        = bool
+  default     = false
+  description = "Configure the network rules inline on the storage account instead of through a separate azurerm_storage_account_network_rules resource. Inline rules are part of the account create request, which is required when an Azure Policy evaluates networkAcls (for example bypass or ip rules) at creation time. Defaults to false. Do not switch this on for an existing account without planning for the change, since the separate network rules resource is removed from state."
+}
+
 variable "blob_storage_backup" {
   description = "Blob storage backup policy settings for the storage account. Defaults to null which does not set any blob storage backup policy."
   type = object({
