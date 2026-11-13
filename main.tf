@@ -6,6 +6,8 @@ resource "azurerm_storage_account" "this" {
   #checkov:skip=CKV_AZURE_206:"Ensure that Storage Accounts use replication" - replication type is configurable; module defaults to ZRS by design
   #checkov:skip=CKV_AZURE_33:"Ensure Storage logging is enabled for Queue service for read, write and delete requests" - queue service logging is out of scope for this module
   #checkov:skip=CKV2_AZURE_33:"Ensure storage account is configured with private endpoint" - private endpoints are provisioned outside this module
+  #checkov:skip=CKV_AZURE_35:"Ensure default network access rule for Storage Accounts is set to deny" - default_action defaults to Deny and is configurable via network_configuration
+  #checkov:skip=CKV_AZURE_36:"Ensure 'Trusted Microsoft Services' is enabled for Storage Account access" - bypass defaults to ["AzureServices"] and is configurable via network_configuration
   resource_group_name               = var.resource_group_name
   location                          = var.location
   name                              = var.name
