@@ -82,3 +82,53 @@ run "local_users_forced_on_by_sftp" {
     error_message = "local_user_enabled must be true when sftp_enabled is true."
   }
 }
+
+run "network_rules_separate_resource_by_default" {
+  command = plan
+
+  assert {
+    condition     = length(azurerm_storage_account_network_rules.this) == 1
+    error_message = "The separate network rules resource should be used by default."
+  }
+
+  assert {
+    condition     = length(azurerm_storage_account.this.network_rules) == 0
+    error_message = "No inline network_rules block should be set by default."
+  }
+}
+
+run "network_rules_inline_when_enabled" {
+  command = plan
+
+  variables {
+    inline_network_rules = true
+    network_configuration = {
+      bypass = ["None"]
+    }
+  }
+
+  assert {
+    condition     = length(azurerm_storage_account_network_rules.this) == 0
+    error_message = "The separate network rules resource should not be created when inline_network_rules is true."
+  }
+
+  assert {
+    condition     = length(azurerm_storage_account.this.network_rules) == 1
+    error_message = "An inline network_rules block should be set when inline_network_rules is true."
+  }
+
+  assert {
+    condition     = azurerm_storage_account.this.network_rules[0].default_action == "Deny"
+    error_message = "Inline network rules should default to Deny."
+  }
+
+  assert {
+    condition     = length(azurerm_storage_account.this.network_rules[0].ip_rules) == 0
+    error_message = "Inline network rules should have no IP rules by default."
+  }
+
+  assert {
+    condition     = contains(azurerm_storage_account.this.network_rules[0].bypass, "None") && length(azurerm_storage_account.this.network_rules[0].bypass) == 1
+    error_message = "Inline network rules should pass the configured bypass value through."
+  }
+}
