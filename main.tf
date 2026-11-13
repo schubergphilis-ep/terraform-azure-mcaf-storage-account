@@ -22,6 +22,7 @@ resource "azurerm_storage_account" "this" {
   cross_tenant_replication_enabled  = var.cross_tenant_replication_enabled
   allowed_copy_scope                = var.allowed_copy_scope == "Unrestricted" ? null : var.allowed_copy_scope
   sftp_enabled                      = var.sftp_enabled
+  local_user_enabled                = var.sftp_enabled || var.local_user_enabled
   is_hns_enabled                    = var.is_hns_enabled
   provisioned_billing_model_version = var.provisioned_billing_model_version
   allow_nested_items_to_be_public   = var.network_configuration.allow_nested_items_to_be_public
