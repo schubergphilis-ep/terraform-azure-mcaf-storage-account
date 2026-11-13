@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.2.0](https://github.com/schubergphilis-ep/terraform-azure-mcaf-storage-account/compare/v3.1.0...v3.2.0) (2026-11-13)
+
+
+### 🚀 Features
+
+* add local_user_enabled input ([#16](https://github.com/schubergphilis-ep/terraform-azure-mcaf-storage-account/issues/16)) ([20bde43](https://github.com/schubergphilis-ep/terraform-azure-mcaf-storage-account/commit/20bde43e1c95d6661473dc4b288d47d0e8dac430))
+
 ## [3.1.0](https://github.com/schubergphilis-ep/terraform-azure-mcaf-storage-account/compare/v3.0.1...v3.1.0) (2026-10-09)
 
 
