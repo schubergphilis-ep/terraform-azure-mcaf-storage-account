@@ -111,15 +111,11 @@ resource "azurerm_storage_account" "this" {
     }
   }
 
-  dynamic "network_rules" {
-    for_each = var.inline_network_rules ? [1] : []
-
-    content {
-      default_action             = var.network_configuration.default_action
-      ip_rules                   = var.network_configuration.ip_rules
-      virtual_network_subnet_ids = var.network_configuration.virtual_network_subnet_ids
-      bypass                     = var.network_configuration.bypass
-    }
+  network_rules {
+    default_action             = var.network_configuration.default_action
+    ip_rules                   = var.network_configuration.ip_rules
+    virtual_network_subnet_ids = var.network_configuration.virtual_network_subnet_ids
+    bypass                     = var.network_configuration.bypass
   }
 
   tags = merge(
@@ -136,22 +132,15 @@ resource "azurerm_storage_account" "this" {
   }
 }
 
-moved {
+# Network rules are now set inline on the storage account, so they are part of the create request
+# (required by policies that evaluate networkAcls at creation time). The standalone resource is
+# dropped from state without touching the existing firewall configuration.
+removed {
   from = azurerm_storage_account_network_rules.this
-  to   = azurerm_storage_account_network_rules.this[0]
-}
 
-resource "azurerm_storage_account_network_rules" "this" {
-  count = var.inline_network_rules ? 0 : 1
-
-  #checkov:skip=CKV_AZURE_35:"Ensure default network access rule for Storage Accounts is set to deny" - default_action defaults to Deny and is configurable via network_configuration
-  #checkov:skip=CKV_AZURE_36:"Ensure 'Trusted Microsoft Services' is enabled for Storage Account access" - bypass defaults to ["AzureServices"] and is configurable via network_configuration
-  storage_account_id = azurerm_storage_account.this.id
-
-  default_action             = var.network_configuration.default_action
-  ip_rules                   = var.network_configuration.ip_rules
-  virtual_network_subnet_ids = var.network_configuration.virtual_network_subnet_ids
-  bypass                     = var.network_configuration.bypass
+  lifecycle {
+    destroy = false
+  }
 }
 
 resource "azurerm_storage_management_policy" "this" {
