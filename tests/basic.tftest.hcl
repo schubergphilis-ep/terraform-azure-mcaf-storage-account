@@ -83,25 +83,29 @@ run "local_users_forced_on_by_sftp" {
   }
 }
 
-run "network_rules_inline_by_default" {
+# The network rules must be part of the storage account create request, so the
+# secure defaults (Deny, no IP rules) are set on the account itself.
+run "network_rules_set_on_storage_account_with_secure_defaults" {
   command = plan
 
   assert {
     condition     = length(azurerm_storage_account.this.network_rules) == 1
-    error_message = "Network rules should be set inline on the storage account."
+    error_message = "Network rules should be configured on the storage account itself, not in a separate resource."
   }
 
   assert {
     condition     = azurerm_storage_account.this.network_rules[0].default_action == "Deny"
-    error_message = "Inline network rules should default to Deny."
+    error_message = "The default network action should be Deny."
   }
 
   assert {
     condition     = length(azurerm_storage_account.this.network_rules[0].ip_rules) == 0
-    error_message = "Inline network rules should have no IP rules by default."
+    error_message = "No IP rules should be configured by default."
   }
 }
 
+# Policies can restrict the allowed bypass values (e.g. only None), so the
+# value from network_configuration must reach the storage account.
 run "network_rules_bypass_configurable" {
   command = plan
 
@@ -113,6 +117,6 @@ run "network_rules_bypass_configurable" {
 
   assert {
     condition     = contains(azurerm_storage_account.this.network_rules[0].bypass, "None") && length(azurerm_storage_account.this.network_rules[0].bypass) == 1
-    error_message = "Inline network rules should pass the configured bypass value through."
+    error_message = "The bypass value from network_configuration should be set on the storage account."
   }
 }
