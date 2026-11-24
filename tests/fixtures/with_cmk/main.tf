@@ -32,3 +32,28 @@ module "storage_account" {
 output "storage_account_name" {
   value = module.storage_account.name
 }
+
+resource "azurerm_user_assigned_identity" "cmk" {
+  name                = "id-cmk"
+  location            = "westeurope"
+  resource_group_name = "rg-test"
+}
+
+module "storage_account_cmk_on_create" {
+  source = "../../.."
+
+  name                     = "teststorageaccountcmk"
+  resource_group_name      = "rg-test"
+  location                 = "westeurope"
+  user_assigned_identities = [azurerm_user_assigned_identity.cmk.id]
+
+  cmk_key = {
+    resource_versionless_id = azurerm_key_vault_key.this.resource_versionless_id
+    versionless_id          = azurerm_key_vault_key.this.versionless_id
+    attach_on_create        = true
+  }
+}
+
+output "storage_account_cmk_on_create_name" {
+  value = module.storage_account_cmk_on_create.name
+}

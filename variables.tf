@@ -168,9 +168,24 @@ variable "cmk_key" {
   type = object({
     resource_versionless_id = string
     versionless_id          = string
+    attach_on_create        = optional(bool, false)
   })
   default     = null
-  description = "Customer Managed Key to use for this storage account. The storage account's identity is granted 'Key Vault Crypto Service Encryption User' on this specific key (least privilege). Leave null to not attach a CMK."
+  description = <<-EOT
+    Customer Managed Key to use for this storage account. Leave null to not attach a CMK.
+
+    By default (attach_on_create = false) the CMK is attached after the storage account is created, and the storage account's system-assigned identity is granted 'Key Vault Crypto Service Encryption User' on this specific key (least privilege).
+
+    Set attach_on_create = true to include the CMK in the storage account's create request, which is required by policies that deny storage accounts without CMK encryption. This mode:
+    - requires at least one user_assigned_identities entry; user_assigned_identities[0] is used to access the key and must already have 'Key Vault Crypto Service Encryption User' on the key before this module is applied (the module does not grant it).
+    - can only be enabled when the storage account is created; enabling it on an existing account without a CMK fails at plan time. To switch an existing account that already has a CMK attached by this module, first run `terraform state rm` on the module's azurerm_storage_account_customer_managed_key.this[0], otherwise Terraform destroys it, which reverts the account to Microsoft-managed keys.
+    - ignores later changes to the key after creation. Use a versionless key id so Azure rotates to new key versions automatically. To manage the key with Terraform later, switch back to attach_on_create = false and `terraform import` the module's azurerm_storage_account_customer_managed_key.this[0] (the provider refuses to create it over an existing CMK).
+  EOT
+
+  validation {
+    condition     = var.cmk_key == null ? true : (!var.cmk_key.attach_on_create || length(var.user_assigned_identities) > 0)
+    error_message = "cmk_key.attach_on_create requires at least one user_assigned_identities entry: a CMK can only be set at creation time through a user-assigned identity."
+  }
 }
 
 variable "tags" {

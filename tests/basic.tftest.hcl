@@ -120,3 +120,81 @@ run "network_rules_bypass_configurable" {
     error_message = "The bypass value from network_configuration should be set on the storage account."
   }
 }
+
+run "cmk_attached_on_create" {
+  command = plan
+
+  variables {
+    user_assigned_identities = ["/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/example-rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/id-cmk"]
+    cmk_key = {
+      resource_versionless_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/example-rg/providers/Microsoft.KeyVault/vaults/mykeyvault/keys/my-key"
+      versionless_id          = "https://mykeyvault.vault.azure.net/keys/my-key"
+      attach_on_create        = true
+    }
+  }
+
+  assert {
+    condition     = length(azurerm_storage_account.this.customer_managed_key) == 1
+    error_message = "CMK should be set inline on the storage account when attach_on_create is true."
+  }
+
+  assert {
+    condition     = azurerm_storage_account.this.customer_managed_key[0].key_vault_key_id == "https://mykeyvault.vault.azure.net/keys/my-key"
+    error_message = "Inline CMK should use the versionless key id."
+  }
+
+  assert {
+    condition     = azurerm_storage_account.this.customer_managed_key[0].user_assigned_identity_id == "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/example-rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/id-cmk"
+    error_message = "Inline CMK should use the first user assigned identity."
+  }
+
+  assert {
+    condition     = length(azurerm_storage_account_customer_managed_key.this) == 0
+    error_message = "The standalone CMK resource should not be created when attach_on_create is true."
+  }
+
+  assert {
+    condition     = length(azurerm_role_assignment.cmk) == 0
+    error_message = "No CMK role assignment should be created when attach_on_create is true."
+  }
+
+  assert {
+    condition     = azurerm_storage_account.this.queue_encryption_key_type == "Account"
+    error_message = "queue_encryption_key_type should be 'Account' when a CMK is attached on create."
+  }
+}
+
+run "cmk_attach_on_create_requires_user_assigned_identity" {
+  command = plan
+
+  variables {
+    cmk_key = {
+      resource_versionless_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/example-rg/providers/Microsoft.KeyVault/vaults/mykeyvault/keys/my-key"
+      versionless_id          = "https://mykeyvault.vault.azure.net/keys/my-key"
+      attach_on_create        = true
+    }
+  }
+
+  expect_failures = [var.cmk_key]
+}
+
+run "cmk_not_inline_by_default" {
+  command = plan
+
+  variables {
+    cmk_key = {
+      resource_versionless_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/example-rg/providers/Microsoft.KeyVault/vaults/mykeyvault/keys/my-key"
+      versionless_id          = "https://mykeyvault.vault.azure.net/keys/my-key"
+    }
+  }
+
+  assert {
+    condition     = length(azurerm_storage_account.this.customer_managed_key) == 0
+    error_message = "CMK should not be set inline unless attach_on_create is true."
+  }
+
+  assert {
+    condition     = length(azurerm_role_assignment.cmk) == 1
+    error_message = "The system-assigned identity should still be granted access to the key in the default mode."
+  }
+}

@@ -118,6 +118,18 @@ resource "azurerm_storage_account" "this" {
     bypass                     = var.network_configuration.bypass
   }
 
+  # Only set when cmk_key.attach_on_create is true, so the CMK is part of the create request
+  # (required by policies that deny storage accounts without CMK encryption). Otherwise the CMK is
+  # attached afterwards by azurerm_storage_account_customer_managed_key.this.
+  dynamic "customer_managed_key" {
+    for_each = local.cmk_attach_on_create ? [var.cmk_key] : []
+
+    content {
+      key_vault_key_id          = customer_managed_key.value.versionless_id
+      user_assigned_identity_id = var.user_assigned_identities[0]
+    }
+  }
+
   tags = merge(
     try(var.tags),
     tomap({
@@ -126,9 +138,18 @@ resource "azurerm_storage_account" "this" {
   )
 
   lifecycle {
+    # Ignored in both modes: the standalone CMK resource would otherwise conflict with this block,
+    # and ignore_changes cannot be conditional. With attach_on_create the block still applies on create.
     ignore_changes = [
       customer_managed_key
     ]
+
+    # Because customer_managed_key is ignored after creation, enabling attach_on_create on an
+    # existing account would silently do nothing. Fail the plan instead.
+    postcondition {
+      condition     = !local.cmk_attach_on_create || length(self.customer_managed_key) > 0
+      error_message = "cmk_key.attach_on_create only takes effect when the storage account is created. This storage account already exists without a CMK: set attach_on_create = false to attach the CMK after creation."
+    }
   }
 }
 
@@ -205,7 +226,7 @@ resource "azurerm_role_assignment" "extra" {
 }
 
 resource "azurerm_storage_account_customer_managed_key" "this" {
-  count = var.cmk_key != null ? 1 : 0
+  count = var.cmk_key != null && !local.cmk_attach_on_create ? 1 : 0
 
   storage_account_id        = azurerm_storage_account.this.id
   user_assigned_identity_id = local.identity_user_assigned != null ? var.user_assigned_identities[0] : null
@@ -216,8 +237,10 @@ resource "azurerm_storage_account_customer_managed_key" "this" {
   ]
 }
 
+# Not created with attach_on_create: the system-assigned identity only exists after the storage
+# account is created, so the user-assigned identity must hold this role on the key beforehand.
 resource "azurerm_role_assignment" "cmk" {
-  count = (var.cmk_key != null && (local.identity_system_assigned != null || local.identity_system_assigned_user_assigned != null)) ? 1 : 0
+  count = (var.cmk_key != null && !local.cmk_attach_on_create && (local.identity_system_assigned != null || local.identity_system_assigned_user_assigned != null)) ? 1 : 0
 
   scope                = var.cmk_key.resource_versionless_id
   role_definition_name = "Key Vault Crypto Service Encryption User"

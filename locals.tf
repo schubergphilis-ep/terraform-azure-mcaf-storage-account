@@ -1,4 +1,6 @@
 locals {
+  cmk_attach_on_create = var.cmk_key != null ? var.cmk_key.attach_on_create : false
+
   identity_system_assigned_user_assigned = (var.system_assigned_identity_enabled && (length(var.user_assigned_identities) > 0)) ? {
     this = {
       type                       = "SystemAssigned, UserAssigned"
