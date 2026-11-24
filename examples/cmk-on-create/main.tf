@@ -1,5 +1,16 @@
 terraform {
   required_version = ">= 1.9"
+
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = ">= 4"
+    }
+  }
+}
+
+provider "azurerm" {
+  features {}
 }
 
 # Example for environments where Azure Policy denies storage accounts without CMK encryption:
