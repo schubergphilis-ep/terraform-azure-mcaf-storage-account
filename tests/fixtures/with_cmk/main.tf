@@ -16,12 +16,6 @@ resource "azurerm_key_vault_key" "this" {
   key_opts     = ["wrapKey", "unwrapKey"]
 }
 
-resource "azurerm_user_assigned_identity" "cmk" {
-  name                = "id-cmk"
-  location            = "westeurope"
-  resource_group_name = "rg-test"
-}
-
 module "storage_account" {
   source = "../../.."
 
@@ -30,8 +24,8 @@ module "storage_account" {
   location            = "westeurope"
 
   cmk_key = {
-    key_vault_key_id          = azurerm_key_vault_key.this.versionless_id
-    user_assigned_identity_id = azurerm_user_assigned_identity.cmk.id
+    resource_versionless_id = azurerm_key_vault_key.this.resource_versionless_id
+    versionless_id          = azurerm_key_vault_key.this.versionless_id
   }
 }
 

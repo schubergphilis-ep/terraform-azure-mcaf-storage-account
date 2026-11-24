@@ -6,10 +6,6 @@ terraform {
       source  = "hashicorp/azurerm"
       version = ">= 4"
     }
-    time = {
-      source  = "hashicorp/time"
-      version = ">= 0.9"
-    }
   }
 }
 
@@ -17,16 +13,11 @@ provider "azurerm" {
   features {}
 }
 
-# The CMK is part of the storage account create request, so this also works where Azure Policy
-# denies storage accounts without CMK encryption.
+# The module creates the storage account's identity, grants it access to the key, and sets the CMK
+# in the create request, so this also works where Azure Policy denies storage accounts without CMK
+# encryption.
 
 data "azurerm_client_config" "current" {}
-
-resource "azurerm_user_assigned_identity" "storage" {
-  name                = "id-storage-cmk"
-  location            = "West Europe"
-  resource_group_name = "rg-example"
-}
 
 resource "azurerm_key_vault" "this" {
   name                       = "kv-storage-cmk"
@@ -46,20 +37,6 @@ resource "azurerm_key_vault_key" "this" {
   key_opts     = ["wrapKey", "unwrapKey"]
 }
 
-# The identity must be able to use the key before the storage account is created.
-resource "azurerm_role_assignment" "storage_cmk" {
-  scope                = azurerm_key_vault_key.this.resource_versionless_id
-  role_definition_name = "Key Vault Crypto Service Encryption User"
-  principal_id         = azurerm_user_assigned_identity.storage.principal_id
-}
-
-# New role assignments can take a few minutes to take effect.
-resource "time_sleep" "storage_cmk_propagation" {
-  create_duration = "60s"
-
-  depends_on = [azurerm_role_assignment.storage_cmk]
-}
-
 module "storage_account" {
   source = "../.."
 
@@ -68,9 +45,12 @@ module "storage_account" {
   location            = "West Europe"
 
   cmk_key = {
-    key_vault_key_id          = azurerm_key_vault_key.this.versionless_id
-    user_assigned_identity_id = azurerm_user_assigned_identity.storage.id
+    resource_versionless_id = azurerm_key_vault_key.this.resource_versionless_id
+    versionless_id          = azurerm_key_vault_key.this.versionless_id
   }
+}
 
-  depends_on = [time_sleep.storage_cmk_propagation]
+# The storage account's identity can be granted access to other resources.
+output "storage_account_principal_id" {
+  value = module.storage_account.identity.principal_id
 }

@@ -37,3 +37,12 @@ output "storage_share_ids" {
   value       = { for key, share in azurerm_storage_share.this : key => share.id }
   description = "Resource Manager IDs for each storage file share"
 }
+
+output "identity" {
+  value = {
+    id           = azurerm_user_assigned_identity.this.id
+    principal_id = azurerm_user_assigned_identity.this.principal_id
+    client_id    = azurerm_user_assigned_identity.this.client_id
+  }
+  description = "The user-assigned identity of the storage account. Use principal_id to grant the storage account access to other resources."
+}

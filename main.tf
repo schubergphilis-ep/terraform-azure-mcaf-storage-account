@@ -46,13 +46,11 @@ resource "azurerm_storage_account" "this" {
     }
   }
 
-  dynamic "identity" {
-    for_each = length(local.user_assigned_identity_ids) > 0 ? [1] : []
-
-    content {
-      type         = "UserAssigned"
-      identity_ids = local.user_assigned_identity_ids
-    }
+  # A user-assigned identity is used instead of a system-assigned one because it exists before the
+  # storage account, so it can be granted access to the CMK before the account is created.
+  identity {
+    type         = "UserAssigned"
+    identity_ids = [azurerm_user_assigned_identity.this.id]
   }
 
   dynamic "immutability_policy" {
@@ -124,8 +122,8 @@ resource "azurerm_storage_account" "this" {
     for_each = var.cmk_key != null ? [var.cmk_key] : []
 
     content {
-      key_vault_key_id          = customer_managed_key.value.key_vault_key_id
-      user_assigned_identity_id = customer_managed_key.value.user_assigned_identity_id
+      key_vault_key_id          = customer_managed_key.value.versionless_id
+      user_assigned_identity_id = azurerm_user_assigned_identity.this.id
     }
   }
 
@@ -135,22 +133,51 @@ resource "azurerm_storage_account" "this" {
       "Resource Type" = "Storage Account"
     })
   )
+
+  # Azure checks that the identity can use the key when the CMK is set.
+  depends_on = [time_sleep.cmk_role_propagation]
+}
+
+# Represents the storage account (1:1), and is used to access the CMK.
+resource "azurerm_user_assigned_identity" "this" {
+  name                = coalesce(var.identity_name, "id-${var.name}")
+  location            = var.location
+  resource_group_name = var.resource_group_name
+
+  tags = var.tags
+}
+
+resource "azurerm_role_assignment" "cmk" {
+  count = var.cmk_key != null ? 1 : 0
+
+  scope                = var.cmk_key.resource_versionless_id
+  role_definition_name = "Key Vault Crypto Service Encryption User"
+  principal_id         = azurerm_user_assigned_identity.this.principal_id
+  principal_type       = "ServicePrincipal"
+
+  # When the key or identity changes, grant access on the new one before the storage account
+  # switches to it, and only remove the old assignment afterwards.
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+# New role assignments can take a while to take effect, and the storage account create or update
+# fails if the identity can't use the key yet.
+resource "time_sleep" "cmk_role_propagation" {
+  count = var.cmk_key != null ? 1 : 0
+
+  create_duration = "60s"
+
+  triggers = {
+    role_assignment_id = azurerm_role_assignment.cmk[0].id
+  }
 }
 
 # The CMK is now set inline on the storage account. The standalone resource is dropped from state
 # without being destroyed, because destroying it reverts the account to Microsoft-managed keys.
 removed {
   from = azurerm_storage_account_customer_managed_key.this
-
-  lifecycle {
-    destroy = false
-  }
-}
-
-# System-assigned identity support was removed, so the module no longer grants key access. The old
-# assignment is kept, so the account doesn't lose key access before it switches identities.
-removed {
-  from = azurerm_role_assignment.cmk
 
   lifecycle {
     destroy = false

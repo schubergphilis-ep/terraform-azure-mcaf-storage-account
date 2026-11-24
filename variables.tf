@@ -120,10 +120,10 @@ variable "is_hns_enabled" {
   description = "(Optional) Enables Hierarchical Namespace for this storage account."
 }
 
-variable "user_assigned_identities" {
-  type        = list(string)
-  default     = []
-  description = "List of user-assigned identity ids to assign to the storage account. The cmk_key identity is added automatically. Defaults to an empty list."
+variable "identity_name" {
+  type        = string
+  default     = null
+  description = "Name of the user-assigned identity the module creates for this storage account. Defaults to 'id-<name>'."
 }
 
 variable "versioning_enabled" {
@@ -160,16 +160,14 @@ variable "enable_cmk_encryption" {
 
 variable "cmk_key" {
   type = object({
-    key_vault_key_id          = string
-    user_assigned_identity_id = string
+    resource_versionless_id = string
+    versionless_id          = string
   })
   default     = null
   description = <<-EOT
-    Customer Managed Key to encrypt this storage account with. Leave null to use Microsoft-managed keys.
+    Customer Managed Key to encrypt this storage account with. Pass the resource_versionless_id and versionless_id attributes of the azurerm_key_vault_key. Leave null to use Microsoft-managed keys.
 
-    The CMK is set when the storage account is created, so it satisfies policies that require CMK encryption. Use a versionless key id (azurerm_key_vault_key.versionless_id) so Azure rotates to new key versions automatically.
-
-    user_assigned_identity_id is attached to the storage account and used to access the key. It must have 'Key Vault Crypto Service Encryption User' on the key before this module is applied; the module does not grant it.
+    The module grants the storage account's identity 'Key Vault Crypto Service Encryption User' on this key (least privilege) and sets the CMK when the storage account is created, so it satisfies policies that require CMK encryption. Azure rotates to new key versions automatically.
   EOT
 }
 
