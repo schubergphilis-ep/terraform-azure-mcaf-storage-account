@@ -120,12 +120,6 @@ variable "is_hns_enabled" {
   description = "(Optional) Enables Hierarchical Namespace for this storage account."
 }
 
-variable "identity_name" {
-  type        = string
-  default     = null
-  description = "Name of the user-assigned identity the module creates for this storage account. Defaults to 'id-<name>'."
-}
-
 variable "versioning_enabled" {
   type        = bool
   default     = true

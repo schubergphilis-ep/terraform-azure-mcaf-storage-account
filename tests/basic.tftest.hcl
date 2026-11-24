@@ -2,7 +2,7 @@ mock_provider "azurerm" {
   # The role assignment validates principal_id as a UUID, so the mocked identity needs real-looking ids.
   mock_resource "azurerm_user_assigned_identity" {
     defaults = {
-      id           = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.ManagedIdentity/userAssignedIdentities/id-sttestcore"
+      id           = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.ManagedIdentity/userAssignedIdentities/sttestcore"
       principal_id = "11111111-1111-1111-1111-111111111111"
       client_id    = "22222222-2222-2222-2222-222222222222"
     }
@@ -28,8 +28,8 @@ run "identity_created_without_cmk_by_default" {
   command = plan
 
   assert {
-    condition     = azurerm_user_assigned_identity.this.name == "id-sttestcore"
-    error_message = "The module should create a user-assigned identity named after the storage account."
+    condition     = azurerm_user_assigned_identity.this.name == "sttestcore"
+    error_message = "The module should create a user-assigned identity with the same name as the storage account."
   }
 
   assert {
@@ -50,19 +50,6 @@ run "identity_created_without_cmk_by_default" {
   assert {
     condition     = azurerm_storage_account.this.queue_encryption_key_type == "Service"
     error_message = "queue_encryption_key_type should default to 'Service' when no CMK is configured and enable_cmk_encryption is false."
-  }
-}
-
-run "identity_name_configurable" {
-  command = plan
-
-  variables {
-    identity_name = "id-custom"
-  }
-
-  assert {
-    condition     = azurerm_user_assigned_identity.this.name == "id-custom"
-    error_message = "identity_name should override the identity name."
   }
 }
 

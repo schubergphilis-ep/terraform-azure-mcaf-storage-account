@@ -11,7 +11,7 @@ When `cmk_key` is set, the module grants this identity `Key Vault Crypto Service
 ### Changes
 
 - Removed the `system_assigned_identity_enabled` and `user_assigned_identities` variables and the `system_assigned_identity_id` output.
-- Added the `identity` output (`id`, `principal_id`, `client_id`) and the optional `identity_name` variable (defaults to `id-<name>`).
+- Added the `identity` output (`id`, `principal_id`, `client_id`). The identity has the same name as the storage account.
 - The `cmk_key` input is unchanged.
 - `azurerm_storage_account_customer_managed_key.this` was removed. A `removed` block drops it from state without destroying it, so the account keeps its CMK during the upgrade.
 - `azurerm_role_assignment.cmk` is now for the module's identity. The old assignment for the system-assigned identity is destroyed and a new one created.

@@ -138,9 +138,9 @@ resource "azurerm_storage_account" "this" {
   depends_on = [time_sleep.cmk_role_propagation]
 }
 
-# Represents the storage account (1:1), and is used to access the CMK.
+# Represents the storage account (1:1) and has the same name. It is used to access the CMK.
 resource "azurerm_user_assigned_identity" "this" {
-  name                = coalesce(var.identity_name, "id-${var.name}")
+  name                = var.name
   location            = var.location
   resource_group_name = var.resource_group_name
 
@@ -150,10 +150,10 @@ resource "azurerm_user_assigned_identity" "this" {
 resource "azurerm_role_assignment" "cmk" {
   count = var.cmk_key != null ? 1 : 0
 
-  scope                = var.cmk_key.resource_versionless_id
-  role_definition_name = "Key Vault Crypto Service Encryption User"
-  principal_id         = azurerm_user_assigned_identity.this.principal_id
-  principal_type       = "ServicePrincipal"
+  scope                            = var.cmk_key.resource_versionless_id
+  role_definition_name             = "Key Vault Crypto Service Encryption User"
+  principal_id                     = azurerm_user_assigned_identity.this.principal_id
+  skip_service_principal_aad_check = false
 
   # When the key or identity changes, grant access on the new one before the storage account
   # switches to it, and only remove the old assignment afterwards.
