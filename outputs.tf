@@ -33,11 +33,6 @@ output "access_keys" {
   sensitive = true
 }
 
-output "system_assigned_identity_id" {
-  value       = var.system_assigned_identity_enabled ? azurerm_storage_account.this.identity[0].principal_id : null
-  description = "System assigned identity id of the storage account"
-}
-
 output "storage_share_ids" {
   value       = { for key, share in azurerm_storage_share.this : key => share.id }
   description = "Resource Manager IDs for each storage file share"

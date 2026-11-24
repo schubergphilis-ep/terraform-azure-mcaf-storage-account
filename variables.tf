@@ -120,16 +120,10 @@ variable "is_hns_enabled" {
   description = "(Optional) Enables Hierarchical Namespace for this storage account."
 }
 
-variable "system_assigned_identity_enabled" {
-  type        = bool
-  default     = true
-  description = "Enable or disable the system-assigned managed identity for this storage account. Defaults to true."
-}
-
 variable "user_assigned_identities" {
   type        = list(string)
   default     = []
-  description = "list of user assigned identities to assign to the storage account. Defaults to an empty list."
+  description = "List of user-assigned identity ids to assign to the storage account. The cmk_key identity is added automatically. Defaults to an empty list."
 }
 
 variable "versioning_enabled" {
@@ -166,26 +160,17 @@ variable "enable_cmk_encryption" {
 
 variable "cmk_key" {
   type = object({
-    resource_versionless_id = string
-    versionless_id          = string
-    attach_on_create        = optional(bool, false)
+    key_vault_key_id          = string
+    user_assigned_identity_id = string
   })
   default     = null
   description = <<-EOT
-    Customer Managed Key to use for this storage account. Leave null to not attach a CMK.
+    Customer Managed Key to encrypt this storage account with. Leave null to use Microsoft-managed keys.
 
-    By default (attach_on_create = false) the CMK is attached after the storage account is created, and the storage account's system-assigned identity is granted 'Key Vault Crypto Service Encryption User' on this specific key (least privilege).
+    The CMK is set when the storage account is created, so it satisfies policies that require CMK encryption. Use a versionless key id (azurerm_key_vault_key.versionless_id) so Azure rotates to new key versions automatically.
 
-    Set attach_on_create = true to include the CMK in the storage account's create request, which is required by policies that deny storage accounts without CMK encryption. This mode:
-    - requires at least one user_assigned_identities entry; user_assigned_identities[0] is used to access the key and must already have 'Key Vault Crypto Service Encryption User' on the key before this module is applied (the module does not grant it).
-    - can only be enabled when the storage account is created; enabling it on an existing account without a CMK fails at plan time. To switch an existing account that already has a CMK attached by this module, first run `terraform state rm` on the module's azurerm_storage_account_customer_managed_key.this[0], otherwise Terraform destroys it, which reverts the account to Microsoft-managed keys.
-    - ignores later changes to the key after creation. Use a versionless key id so Azure rotates to new key versions automatically. To manage the key with Terraform later, switch back to attach_on_create = false and `terraform import` the module's azurerm_storage_account_customer_managed_key.this[0] (the provider refuses to create it over an existing CMK).
+    user_assigned_identity_id is attached to the storage account and used to access the key. It must have 'Key Vault Crypto Service Encryption User' on the key before this module is applied; the module does not grant it.
   EOT
-
-  validation {
-    condition     = var.cmk_key == null ? true : (!var.cmk_key.attach_on_create || length(var.user_assigned_identities) > 0)
-    error_message = "cmk_key.attach_on_create requires at least one user_assigned_identities entry: a CMK can only be set at creation time through a user-assigned identity."
-  }
 }
 
 variable "tags" {

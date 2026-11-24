@@ -1,22 +1,7 @@
 locals {
-  cmk_attach_on_create = var.cmk_key != null ? var.cmk_key.attach_on_create : false
-
-  identity_system_assigned_user_assigned = (var.system_assigned_identity_enabled && (length(var.user_assigned_identities) > 0)) ? {
-    this = {
-      type                       = "SystemAssigned, UserAssigned"
-      user_assigned_resource_ids = var.user_assigned_identities
-    }
-  } : null
-  identity_system_assigned = var.system_assigned_identity_enabled ? {
-    this = {
-      type                       = "SystemAssigned"
-      user_assigned_resource_ids = null
-    }
-  } : null
-  identity_user_assigned = (length(var.user_assigned_identities) > 0) ? {
-    this = {
-      type                       = "UserAssigned"
-      user_assigned_resource_ids = var.user_assigned_identities
-    }
-  } : null
+  # The CMK identity must be attached to the storage account, so it is always included.
+  user_assigned_identity_ids = distinct(concat(
+    var.user_assigned_identities,
+    var.cmk_key != null ? [var.cmk_key.user_assigned_identity_id] : []
+  ))
 }

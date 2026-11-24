@@ -47,11 +47,11 @@ resource "azurerm_storage_account" "this" {
   }
 
   dynamic "identity" {
-    for_each = coalesce(local.identity_system_assigned_user_assigned, local.identity_system_assigned, local.identity_user_assigned, {})
+    for_each = length(local.user_assigned_identity_ids) > 0 ? [1] : []
 
     content {
-      type         = identity.value.type
-      identity_ids = identity.value.user_assigned_resource_ids
+      type         = "UserAssigned"
+      identity_ids = local.user_assigned_identity_ids
     }
   }
 
@@ -118,15 +118,14 @@ resource "azurerm_storage_account" "this" {
     bypass                     = var.network_configuration.bypass
   }
 
-  # Only set when cmk_key.attach_on_create is true, so the CMK is part of the create request
-  # (required by policies that deny storage accounts without CMK encryption). Otherwise the CMK is
-  # attached afterwards by azurerm_storage_account_customer_managed_key.this.
+  # Set inline so the CMK is part of the create request (required by policies that deny storage
+  # accounts without CMK encryption) and changes to the key or identity are applied in place.
   dynamic "customer_managed_key" {
-    for_each = local.cmk_attach_on_create ? [var.cmk_key] : []
+    for_each = var.cmk_key != null ? [var.cmk_key] : []
 
     content {
-      key_vault_key_id          = customer_managed_key.value.versionless_id
-      user_assigned_identity_id = var.user_assigned_identities[0]
+      key_vault_key_id          = customer_managed_key.value.key_vault_key_id
+      user_assigned_identity_id = customer_managed_key.value.user_assigned_identity_id
     }
   }
 
@@ -136,20 +135,25 @@ resource "azurerm_storage_account" "this" {
       "Resource Type" = "Storage Account"
     })
   )
+}
+
+# The CMK is now set inline on the storage account. The standalone resource is dropped from state
+# without being destroyed, because destroying it reverts the account to Microsoft-managed keys.
+removed {
+  from = azurerm_storage_account_customer_managed_key.this
 
   lifecycle {
-    # Ignored in both modes: the standalone CMK resource would otherwise conflict with this block,
-    # and ignore_changes cannot be conditional. With attach_on_create the block still applies on create.
-    ignore_changes = [
-      customer_managed_key
-    ]
+    destroy = false
+  }
+}
 
-    # Because customer_managed_key is ignored after creation, enabling attach_on_create on an
-    # existing account would silently do nothing. Fail the plan instead.
-    postcondition {
-      condition     = !local.cmk_attach_on_create || length(self.customer_managed_key) > 0
-      error_message = "cmk_key.attach_on_create only takes effect when the storage account is created. This storage account already exists without a CMK: set attach_on_create = false to attach the CMK after creation."
-    }
+# System-assigned identity support was removed, so the module no longer grants key access. The old
+# assignment is kept, so the account doesn't lose key access before it switches identities.
+removed {
+  from = azurerm_role_assignment.cmk
+
+  lifecycle {
+    destroy = false
   }
 }
 
@@ -223,28 +227,6 @@ resource "azurerm_role_assignment" "extra" {
   scope                = azurerm_storage_account.this.id
   role_definition_name = "Storage Blob Data Contributor"
   principal_id         = each.value
-}
-
-resource "azurerm_storage_account_customer_managed_key" "this" {
-  count = var.cmk_key != null && !local.cmk_attach_on_create ? 1 : 0
-
-  storage_account_id        = azurerm_storage_account.this.id
-  user_assigned_identity_id = local.identity_user_assigned != null ? var.user_assigned_identities[0] : null
-  key_vault_key_id          = var.cmk_key.versionless_id
-
-  depends_on = [
-    azurerm_role_assignment.cmk
-  ]
-}
-
-# Not created with attach_on_create: the system-assigned identity only exists after the storage
-# account is created, so the user-assigned identity must hold this role on the key beforehand.
-resource "azurerm_role_assignment" "cmk" {
-  count = (var.cmk_key != null && !local.cmk_attach_on_create && (local.identity_system_assigned != null || local.identity_system_assigned_user_assigned != null)) ? 1 : 0
-
-  scope                = var.cmk_key.resource_versionless_id
-  role_definition_name = "Key Vault Crypto Service Encryption User"
-  principal_id         = azurerm_storage_account.this.identity[0].principal_id
 }
 
 resource "azurerm_data_protection_backup_instance_blob_storage" "this" {

@@ -6,6 +6,10 @@ terraform {
       source  = "hashicorp/azurerm"
       version = ">= 4"
     }
+    time = {
+      source  = "hashicorp/time"
+      version = ">= 0.9"
+    }
   }
 }
 
@@ -13,8 +17,8 @@ provider "azurerm" {
   features {}
 }
 
-# Example for environments where Azure Policy denies storage accounts without CMK encryption:
-# the CMK is part of the storage account create request instead of being attached afterwards.
+# The CMK is part of the storage account create request, so this also works where Azure Policy
+# denies storage accounts without CMK encryption.
 
 data "azurerm_client_config" "current" {}
 
@@ -42,26 +46,31 @@ resource "azurerm_key_vault_key" "this" {
   key_opts     = ["wrapKey", "unwrapKey"]
 }
 
-# The user-assigned identity must be able to use the key before the storage account is created.
+# The identity must be able to use the key before the storage account is created.
 resource "azurerm_role_assignment" "storage_cmk" {
   scope                = azurerm_key_vault_key.this.resource_versionless_id
   role_definition_name = "Key Vault Crypto Service Encryption User"
   principal_id         = azurerm_user_assigned_identity.storage.principal_id
 }
 
+# New role assignments can take a few minutes to take effect.
+resource "time_sleep" "storage_cmk_propagation" {
+  create_duration = "60s"
+
+  depends_on = [azurerm_role_assignment.storage_cmk]
+}
+
 module "storage_account" {
   source = "../.."
 
-  name                     = "stexamplecmk"
-  resource_group_name      = "rg-example"
-  location                 = "West Europe"
-  user_assigned_identities = [azurerm_user_assigned_identity.storage.id]
+  name                = "stexamplecmk"
+  resource_group_name = "rg-example"
+  location            = "West Europe"
 
   cmk_key = {
-    resource_versionless_id = azurerm_key_vault_key.this.resource_versionless_id
-    versionless_id          = azurerm_key_vault_key.this.versionless_id
-    attach_on_create        = true
+    key_vault_key_id          = azurerm_key_vault_key.this.versionless_id
+    user_assigned_identity_id = azurerm_user_assigned_identity.storage.id
   }
 
-  depends_on = [azurerm_role_assignment.storage_cmk]
+  depends_on = [time_sleep.storage_cmk_propagation]
 }
