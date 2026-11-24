@@ -2,6 +2,34 @@
 
 This document captures required refactoring on your part when upgrading to a module version that contains breaking changes.
 
+## Upgrading to v4.0.0
+
+The storage account now gets its own user-assigned identity, created by the module and 1:1 with the storage account. It replaces the system-assigned identity and the `user_assigned_identities` input. A system-assigned identity only exists after the storage account is created, so it can't be granted access to a key before creation. That made it impossible to set a CMK in the create request, which Azure policies requiring CMK encryption need.
+
+When `cmk_key` is set, the module grants this identity `Key Vault Crypto Service Encryption User` on the key, waits for the role assignment to take effect, and sets the CMK on the storage account itself.
+
+### Changes
+
+- Removed the `system_assigned_identity_enabled` and `user_assigned_identities` variables and the `system_assigned_identity_id` output.
+- Added the `identity` output (`id`, `principal_id`, `client_id`). The identity has the same name as the storage account.
+- The `cmk_key` input is unchanged.
+- `azurerm_storage_account_customer_managed_key.this` was removed. A `removed` block drops it from state without destroying it, so the account keeps its CMK during the upgrade.
+- `azurerm_role_assignment.cmk` is now for the module's identity. The old assignment for the system-assigned identity is destroyed and a new one created.
+- The module now also requires the `hashicorp/time` provider.
+
+The module's identity is created in `resource_group_name`, so the identity running Terraform needs permission to create managed identities there. To grant the CMK role, it also needs permission to create role assignments on the key, for example `Role Based Access Control Administrator` or `Owner`.
+
+### Migration steps
+
+1. Anything outside this module that used the `system_assigned_identity_id` output (for example role assignments that let the storage account access other resources) has to move to `module.<name>.identity.principal_id`. The system-assigned identity is deleted on upgrade, even without a CMK, because `system_assigned_identity_enabled` defaulted to `true`.
+2. Remove `system_assigned_identity_enabled` and `user_assigned_identities` from the module call. If you passed in a user-assigned identity, grant the module's identity whatever that identity had access to.
+3. Run `terraform plan`. Expect:
+   - a new `azurerm_user_assigned_identity.this` and, with a CMK, a new `time_sleep.cmk_role_propagation`
+   - `azurerm_role_assignment.cmk` replaced (new identity)
+   - the storage account updated in place: identity changes to `UserAssigned`, and `customer_managed_key` is set
+   - `azurerm_storage_account_customer_managed_key.this` removed from state, not destroyed
+
+   If the plan wants to replace the storage account, stop.
 
 ## Upgrading to v3.0.1
 

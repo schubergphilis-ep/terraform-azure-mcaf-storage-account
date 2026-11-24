@@ -120,18 +120,6 @@ variable "is_hns_enabled" {
   description = "(Optional) Enables Hierarchical Namespace for this storage account."
 }
 
-variable "system_assigned_identity_enabled" {
-  type        = bool
-  default     = true
-  description = "Enable or disable the system-assigned managed identity for this storage account. Defaults to true."
-}
-
-variable "user_assigned_identities" {
-  type        = list(string)
-  default     = []
-  description = "list of user assigned identities to assign to the storage account. Defaults to an empty list."
-}
-
 variable "versioning_enabled" {
   type        = bool
   default     = true
@@ -170,7 +158,11 @@ variable "cmk_key" {
     versionless_id          = string
   })
   default     = null
-  description = "Customer Managed Key to use for this storage account. The storage account's identity is granted 'Key Vault Crypto Service Encryption User' on this specific key (least privilege). Leave null to not attach a CMK."
+  description = <<-EOT
+    Customer Managed Key to encrypt this storage account with. Pass the resource_versionless_id and versionless_id attributes of the azurerm_key_vault_key. Leave null to use Microsoft-managed keys.
+
+    The module grants the storage account's identity 'Key Vault Crypto Service Encryption User' on this key (least privilege) and sets the CMK when the storage account is created, so it satisfies policies that require CMK encryption. Azure rotates to new key versions automatically.
+  EOT
 }
 
 variable "tags" {

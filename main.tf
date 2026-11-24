@@ -46,13 +46,11 @@ resource "azurerm_storage_account" "this" {
     }
   }
 
-  dynamic "identity" {
-    for_each = coalesce(local.identity_system_assigned_user_assigned, local.identity_system_assigned, local.identity_user_assigned, {})
-
-    content {
-      type         = identity.value.type
-      identity_ids = identity.value.user_assigned_resource_ids
-    }
+  # A user-assigned identity is used instead of a system-assigned one because it exists before the
+  # storage account, so it can be granted access to the CMK before the account is created.
+  identity {
+    type         = "UserAssigned"
+    identity_ids = [azurerm_user_assigned_identity.this.id]
   }
 
   dynamic "immutability_policy" {
@@ -118,6 +116,17 @@ resource "azurerm_storage_account" "this" {
     bypass                     = var.network_configuration.bypass
   }
 
+  # Set inline so the CMK is part of the create request (required by policies that deny storage
+  # accounts without CMK encryption) and changes to the key or identity are applied in place.
+  dynamic "customer_managed_key" {
+    for_each = var.cmk_key != null ? [var.cmk_key] : []
+
+    content {
+      key_vault_key_id          = customer_managed_key.value.versionless_id
+      user_assigned_identity_id = azurerm_user_assigned_identity.this.id
+    }
+  }
+
   tags = merge(
     try(var.tags),
     tomap({
@@ -125,10 +134,53 @@ resource "azurerm_storage_account" "this" {
     })
   )
 
+  # Azure checks that the identity can use the key when the CMK is set.
+  depends_on = [time_sleep.cmk_role_propagation]
+}
+
+# Represents the storage account (1:1) and has the same name. It is used to access the CMK.
+resource "azurerm_user_assigned_identity" "this" {
+  name                = var.name
+  location            = var.location
+  resource_group_name = var.resource_group_name
+
+  tags = var.tags
+}
+
+resource "azurerm_role_assignment" "cmk" {
+  count = var.cmk_key != null ? 1 : 0
+
+  scope                            = var.cmk_key.resource_versionless_id
+  role_definition_name             = "Key Vault Crypto Service Encryption User"
+  principal_id                     = azurerm_user_assigned_identity.this.principal_id
+  skip_service_principal_aad_check = false
+
+  # When the key or identity changes, grant access on the new one before the storage account
+  # switches to it, and only remove the old assignment afterwards.
   lifecycle {
-    ignore_changes = [
-      customer_managed_key
-    ]
+    create_before_destroy = true
+  }
+}
+
+# New role assignments can take a while to take effect, and the storage account create or update
+# fails if the identity can't use the key yet.
+resource "time_sleep" "cmk_role_propagation" {
+  count = var.cmk_key != null ? 1 : 0
+
+  create_duration = "60s"
+
+  triggers = {
+    role_assignment_id = azurerm_role_assignment.cmk[0].id
+  }
+}
+
+# The CMK is now set inline on the storage account. The standalone resource is dropped from state
+# without being destroyed, because destroying it reverts the account to Microsoft-managed keys.
+removed {
+  from = azurerm_storage_account_customer_managed_key.this
+
+  lifecycle {
+    destroy = false
   }
 }
 
@@ -202,26 +254,6 @@ resource "azurerm_role_assignment" "extra" {
   scope                = azurerm_storage_account.this.id
   role_definition_name = "Storage Blob Data Contributor"
   principal_id         = each.value
-}
-
-resource "azurerm_storage_account_customer_managed_key" "this" {
-  count = var.cmk_key != null ? 1 : 0
-
-  storage_account_id        = azurerm_storage_account.this.id
-  user_assigned_identity_id = local.identity_user_assigned != null ? var.user_assigned_identities[0] : null
-  key_vault_key_id          = var.cmk_key.versionless_id
-
-  depends_on = [
-    azurerm_role_assignment.cmk
-  ]
-}
-
-resource "azurerm_role_assignment" "cmk" {
-  count = (var.cmk_key != null && (local.identity_system_assigned != null || local.identity_system_assigned_user_assigned != null)) ? 1 : 0
-
-  scope                = var.cmk_key.resource_versionless_id
-  role_definition_name = "Key Vault Crypto Service Encryption User"
-  principal_id         = azurerm_storage_account.this.identity[0].principal_id
 }
 
 resource "azurerm_data_protection_backup_instance_blob_storage" "this" {
